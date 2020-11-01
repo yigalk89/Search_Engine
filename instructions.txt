@@ -6,7 +6,7 @@ To start working in the venv put it in your project folder and run:
 		source env/bin/activate
 		
 	On Windows:
-		.\env\Scripts\activate
+		.\venv\Scripts\activate
 
 Notes:
 Main Class will be search_engine.

@@ -3,7 +3,7 @@ class Indexer:
     def __init__(self, config):
         self.inverted_idx = {}
         self.postingDict = {}
-        self.conig = config
+        self.config = config
 
     def add_new_doc(self, document):
         """

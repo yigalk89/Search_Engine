@@ -1,0 +1,18 @@
+1. Go to https://www.python.org/downloads/release/python-371/ and download python 3.7.1
+2. Open venv/pyvenv.cfg with editor and change 'home = %PATH TO PYTHON 3.7.1%' to your python path
+3. Go to venv/nltk_data/corpora and place the content of downloaded stop words from the class site there.
+
+To start working in the venv put it in your project folder and run:
+	On macOS and Linux:
+		source env/bin/activate
+		
+	On Windows:
+		.\env\Scripts\activate
+
+Notes:
+Main Class will be search_engine.
+Do Not change the Basic Class names and locations, You may only add files.
+The tests are automated and sanity checks will be applied on your code when it is uploaded to make sure that the structure remains intact, any failure to pass them will not be checked.
+Make sure that the project name will not be changes and will stay Search_Engine.
+The File main.py will be overwritten during he tests, Please make sure that you have no login in it!!!
+Please note that installing any other package may cause your project to fail it's run while testing.

@@ -7,7 +7,7 @@ mkdir venv\nltk_data
 
 venv\Scripts\activate & ^
 python -m pip install --upgrade pip & ^
-pip install -r requirements.txt --use-feature=2020-resolver & ^
+pip install -r requirements.txt & ^
 python setup.py & ^
 deactivate
 

@@ -1,9 +1,10 @@
 1. Go to https://www.python.org/downloads/release/python-371/ and download python 3.7.1
-2. Open venv/pyvenv.cfg with editor and change 'home = %PATH TO PYTHON 3.7.1%' to your python path
+2. Navigate with cmd to the repo folder Search_Engine and run run.bat
+	This will make a new venv and install all dependencies on it.
 
 To start working in the venv put it in your project folder and run:
 	On macOS and Linux:
-		source env/bin/activate
+		source venv/bin/activate
 		
 	On Windows:
 		.\venv\Scripts\activate

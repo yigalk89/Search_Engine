@@ -1,10 +1,10 @@
 class ConfigClass:
-    def __init__(self):
-        self.corpusPath = ''
+    def __init__(self, courpus_path='', to_stem=False):
+        self.corpusPath = courpus_path
         self.savedFileMainFolder = ''
         self.saveFilesWithStem = self.savedFileMainFolder + "/WithStem"
         self.saveFilesWithoutStem = self.savedFileMainFolder + "/WithoutStem"
-        self.toStem = False
+        self.toStem = to_stem
 
         print('Project was created successfully..')
 

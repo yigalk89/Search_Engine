@@ -8,6 +8,23 @@ class Parse:
     def __init__(self):
         self.stop_words = stopwords.words('english')
 
+    def apply_rules(self, tokens_list):
+        tokens_list = self.hashtag(tokens_list)
+        tokens_list = self.tags(tokens_list)
+        tokens_list = self.percents(tokens_list)
+        tokens_list = self.numbers(tokens_list)
+        tokens_list = self.urls(tokens_list)
+
+        return tokens_list
+
+    def hastag(self, tokens_list):
+
+        """
+        Do work
+        """
+        return tokens_list
+
+
     def parse_sentence(self, text):
         """
         This function tokenize, remove stop words and apply lower case for every word within the text
@@ -37,7 +54,9 @@ class Parse:
 
         doc_length = len(tokenized_text)  # after text operations.
 
-        for term in tokenized_text:
+        tokenized_text_w_rules = self.aplly_rules(tokenized_text)
+
+        for term in tokenized_text_w_rules:
             if term not in term_dict.keys():
                 term_dict[term] = 1
             else:

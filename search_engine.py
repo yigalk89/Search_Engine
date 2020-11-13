@@ -13,12 +13,12 @@ def run_engine():
     """
     number_of_documents = 0
 
-    config = ConfigClass()
+    config = ConfigClass("Data")
     r = ReadFile(corpus_path=config.get__corpusPath())
     p = Parse()
     indexer = Indexer(config)
 
-    documents_list = r.read_file(file_name='sample3.parquet')
+    documents_list = r.read_file(file_name='date=07-08-2020/covid19_07-08.snappy.parquet')
     # Iterate over every document in the file
     for idx, document in enumerate(documents_list):
         # parse the document

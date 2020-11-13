@@ -1,7 +1,7 @@
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from document import Document
-
+from urllib.parse import urlparse
 
 class Parse:
 
@@ -23,6 +23,14 @@ class Parse:
         Do work
         """
         return tokens_list
+
+    def urls(self, tokens_list):
+        for term in tokens_list:
+            parsed_url = urlparse(term)
+            if parsed_url.scheme != '':
+                
+
+
 
 
     def parse_sentence(self, text):

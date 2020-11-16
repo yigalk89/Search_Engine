@@ -67,15 +67,25 @@ class Parse:
                     continue
 
                 # Handle regular number
-                if float(current_token_no_comma) < 1000:
+                # start with extracting pattern of a number
+                pattern = r"\d+\.?\d*"
+                reg_pattern = re.compile(pattern)
+                result = re.search(reg_pattern, current_token_no_comma)
+                if result is None:
+                    tokens_to_output.append(current_token_no_comma)
+                    i += 1
+                    continue
+                else:
+                    num_to_evaluate = float(result.group(0))
+                if num_to_evaluate < 1000:
                     # with suffix
                     if next_token in suffix_to_number.keys():
                         i += 1
                         tokens_iter.__next__()
-                        num_to_evaluate = float(current_token_no_comma) * suffix_to_number[next_token]
+                        num_to_evaluate *= suffix_to_number[next_token]
                         out_token = self.format_num(num_to_evaluate)
                     else:
-                        out_token = self.format_num(float(current_token_no_comma))
+                        out_token = self.format_num(num_to_evaluate)
 
                     if next_next_token == '$' or next_next_token == 'dollar':
                         has_dollar = True
@@ -85,7 +95,6 @@ class Parse:
                         out_token += '$'
                 # Number greater than 1000
                 else:
-                    num_to_evaluate = float(current_token_no_comma)
                     out_token = self.format_num(num_to_evaluate)
                 if is_next_dollar:
                     i += 1
@@ -124,6 +133,7 @@ class Parse:
         return True if token in suffix_list else False
 
     def contains_fraction(self, token):
+        if token is None: return False
         fraction_pattern = re.compile('(\\d+)(\\s*/\\s*)(\\d+)')
         return bool(fraction_pattern.search(token))
 
@@ -167,7 +177,10 @@ class Parse:
         for url in urls:
             if '' == url: continue  # ignore empty entry
             # work only on the full url
-            url_to_parse = url.split('\":\"')[1].replace('\'','').replace('\"','')
+            urls_splitted = url.split('\":\"')
+            # protect urls where the full url is none
+            if len(urls_splitted) % 2 != 0: continue
+            url_to_parse = urls_splitted[1].replace('\'','').replace('\"','')
             parsed_url = urlparse(url_to_parse)
             tokens_extracted.append(parsed_url.scheme)
             # handle domain

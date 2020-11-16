@@ -16,20 +16,18 @@ class Parse:
     def tags(self,text):
 
         tags=[text[i+1] for i in range(0,len(text)) if text[i] == '@']
-        print (tags)
+
         return tags
-    print (tags)
+
     # caring off percent
+
     def percentage(self,text):
         percent = []
-        for prc in text:
-            cnt = cnt + 1
-            if prc in ('percent', 'percentage'):
-                percent.append("{}%".format(text[cnt - 2]))
-            if '%' in prc:
-                percent.append(prc)
+        for i in range(0, len(text)):
+            if text[i] in ['%', 'percent', 'percentage']:
+              percent.append("{}%".format(text[i - 1]))
 
-        print(percent)
+
 
         return percent
 
@@ -77,7 +75,7 @@ class Parse:
 
 
           #for i in hashtaglist:
-        print(terms)
+
 
 
         '''''''''

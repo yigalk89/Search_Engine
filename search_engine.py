@@ -5,7 +5,6 @@ from indexer import Indexer
 from searcher import Searcher
 import utils
 from os import listdir
-from ziplnew import Zipf
 
 from os.path import isfile, join
 import  pandas as pd

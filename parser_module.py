@@ -94,7 +94,7 @@ class Parse:
     def apply_rules(self, tokens_list):
         tokens_list = self.hashtag(tokens_list)
         tokens_list = self.tags(tokens_list)
-        tokens_list = self.percents(tokens_list)
+        tokens_list = self.percentage(tokens_list)
         tokens_list = self.parse_numbers(tokens_list)
 
         return tokens_list

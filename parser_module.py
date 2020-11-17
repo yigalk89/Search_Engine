@@ -13,6 +13,7 @@ class Parse:
 
 
 
+    # what happens if the last word is "@"?
     # caring off tags
     def tags(self,text):
 
@@ -22,6 +23,7 @@ class Parse:
 
     # caring off percent
 
+    # What happen if the first word is percent?
     def percentage(self,text):
         percent = []
         for i in range(0, len(text)):
@@ -90,7 +92,6 @@ class Parse:
 
         return terms + upcases
 
-
     def apply_rules(self, tokens_list):
         tokens_list = self.hashtag(tokens_list)
         tokens_list = self.tags(tokens_list)
@@ -121,14 +122,14 @@ class Parse:
                 current_token_no_comma = self.strip_commas(current_token)
                 current_token_no_comma, has_dollar = self.treat_dollar(current_token_no_comma)
                 has_fraction = self.contains_fraction(current_token_no_comma)
-                is_next_suffix = True if next_token in list(suffix_to_number.keys()) else False
+                is_next_suffix = True if next_token.lower() in list(suffix_to_number.keys()) else False
                 is_next_dollar = next_token == '$' or next_token == 'dollar'
 
                 # Handle fraction
                 if has_fraction:
                     token_to_push = current_token_no_comma
                     if is_next_suffix:
-                        token_to_push += current_token_no_comma + suffix_to_shortcut[next_token]
+                        token_to_push += current_token_no_comma + suffix_to_shortcut[next_token.lower()]
                         tokens_iter.__next__()
                         i += 1
                         # handle edge case when there is 1/2 Million $
@@ -163,7 +164,7 @@ class Parse:
                     if next_token in suffix_to_number.keys():
                         i += 1
                         tokens_iter.__next__()
-                        num_to_evaluate *= suffix_to_number[next_token]
+                        num_to_evaluate *= suffix_to_number[next_token.lower()]
                         out_token = self.format_num(num_to_evaluate)
                     else:
                         out_token = self.format_num(num_to_evaluate)
@@ -283,7 +284,7 @@ class Parse:
         :return:
         """
         text_tokens = word_tokenize(text)
-        text_tokens_without_stopwords = [w.lower() for w in text_tokens if w not in self.stop_words]
+        text_tokens_without_stopwords = [w for w in text_tokens if w not in self.stop_words]
         return text_tokens_without_stopwords
 
     def parse_doc(self, doc_as_list):
@@ -311,12 +312,10 @@ class Parse:
         # Remove raw URLs from the terms list (they aren't informative, deal with them later in the flaw)
         text_wo_urls = self.remove_raw_urls(full_text, url_indices)
         tokenized_text = self.parse_sentence(text_wo_urls)
-
-        doc_length = len(tokenized_text)  # after text operations.
-
         tokenized_text_w_rules = self.apply_rules(tokenized_text)
-
         tokenized_text_w_rules += self.parse_url_field(url)
+
+        doc_length = len(tokenized_text_w_rules)  # after text operations.
 
         for term in tokenized_text_w_rules:
             if term not in term_dict.keys():

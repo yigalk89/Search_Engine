@@ -17,7 +17,7 @@ class Parse:
     # caring off tags
     def tags(self,text):
 
-        tags=[text[i+1] for i in range(0,len(text)) if text[i] == '@']
+        tags=[text[i+1] for i in range(0,len(text) -1) if text[i] == '@']
 
         return tags
 
@@ -93,9 +93,9 @@ class Parse:
         return terms + upcases
 
     def apply_rules(self, tokens_list):
-        tokens_list = self.hashtag(tokens_list)
-        tokens_list = self.tags(tokens_list)
-        tokens_list = self.percentage(tokens_list)
+        tokens_list += self.hashtag(tokens_list)
+        tokens_list += self.tags(tokens_list)
+        tokens_list += self.percentage(tokens_list)
         tokens_list = self.parse_numbers(tokens_list)
 
         return tokens_list
@@ -112,6 +112,7 @@ class Parse:
             # Check if this token contains a number
             if any(map(str.isdigit, current_token)):
                 next_token = tokens_list[i + 1] if i < tokens_num - 1 else None
+                if next_token is not None: next_token = next_token.lower()
                 next_next_token = tokens_list[i + 2] if i < tokens_num - 2 else None
                 if self.contain_letter(current_token):
                     tokens_to_output.append(current_token)
@@ -122,14 +123,14 @@ class Parse:
                 current_token_no_comma = self.strip_commas(current_token)
                 current_token_no_comma, has_dollar = self.treat_dollar(current_token_no_comma)
                 has_fraction = self.contains_fraction(current_token_no_comma)
-                is_next_suffix = True if next_token.lower() in list(suffix_to_number.keys()) else False
+                is_next_suffix = True if next_token in list(suffix_to_number.keys()) else False
                 is_next_dollar = next_token == '$' or next_token == 'dollar'
 
                 # Handle fraction
                 if has_fraction:
                     token_to_push = current_token_no_comma
                     if is_next_suffix:
-                        token_to_push += current_token_no_comma + suffix_to_shortcut[next_token.lower()]
+                        token_to_push += current_token_no_comma + suffix_to_shortcut[next_token]
                         tokens_iter.__next__()
                         i += 1
                         # handle edge case when there is 1/2 Million $
@@ -264,10 +265,12 @@ class Parse:
             if len(urls_splitted) % 2 != 0: continue
             url_to_parse = urls_splitted[1].replace('\'','').replace('\"','')
             parsed_url = urlparse(url_to_parse)
-            tokens_extracted.append(parsed_url.scheme)
+            # ignoring https prefix
+            # tokens_extracted.append(parsed_url.scheme)
             # handle domain
             if parsed_url.netloc.startswith('www.'):
-                tokens_extracted.append(parsed_url.netloc[:3])
+                # omit the www part
+                # tokens_extracted.append(parsed_url.netloc[:3])
                 tokens_extracted.append(parsed_url.netloc[4:])
             else:
                 tokens_extracted.append(parsed_url.netloc)
@@ -314,6 +317,8 @@ class Parse:
         tokenized_text = self.parse_sentence(text_wo_urls)
         tokenized_text_w_rules = self.apply_rules(tokenized_text)
         tokenized_text_w_rules += self.parse_url_field(url)
+        # filter out punctuation terms
+        tokenized_text_w_rules = [token for token in tokenized_text_w_rules if token not in punctuation]
 
         doc_length = len(tokenized_text_w_rules)  # after text operations.
 
@@ -324,5 +329,5 @@ class Parse:
                 term_dict[term] += 1
 
         document = Document(tweet_id, tweet_date, full_text, url, retweet_text, retweet_url, quote_text,
-                            quote_url, term_dict, doc_length)
+                            quote_url, term_dict, doc_length, len(term_dict))
         return document

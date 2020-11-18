@@ -1,4 +1,5 @@
 import os
+import threading
 import pandas as pd
 
 
@@ -8,6 +9,7 @@ class ReadFile:
         self.corpus_path = ''
         self.files_list = []
         self.counter = 0
+        #self.lock = threading.Lock()
         for path, subdirs, files in os.walk(corpus_path):
             for name in files:
                 if os.path.isfile(os.path.join(path, name)) and os.path.splitext(name)[1] == '.parquet':
@@ -25,12 +27,24 @@ class ReadFile:
         df = pd.read_parquet(full_path, engine="pyarrow")
         return df.values.tolist()
 
-    def read_next_file(self):
-        print(self.counter, len(self.files_list), self.files_list[self.counter])
-        if self.counter < len(self.files_list):
-            parsed_file = self.read_file(self.files_list[self.counter])
-            self.counter += 1
-            return parsed_file
+    # def read_next_file(self):
+    #     self.lock.acquire()
+    #     counter = self.counter
+    #     self.counter += 1
+    #     self.lock.release()
+    #     if counter < len(self.files_list):
+    #         print(counter, len(self.files_list), self.files_list[counter])
+    #         file_to_output = self.read_file(self.files_list[counter])
+    #         return file_to_output
+    #     return None
+
+    def get_files_number(self):
+        return len(self.files_list)
+
+    def read_file_at_index(self, i):
+        if i < len(self.files_list):
+            print("reading file {} from index {}".format(self.files_list[i], i))
+            return self.read_file(self.files_list[i])
         return None
 
 

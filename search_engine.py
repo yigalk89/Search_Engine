@@ -6,8 +6,9 @@ from searcher import Searcher
 import utils
 import sys
 import os
+from orchestrate_parsing import parse_wrapper
 
-def run_engine(corpus_path='', output_path='', stemming=False):
+def run_engine(corpus_path='', output_path='.', stemming=False):
     """
 
     :return:
@@ -17,23 +18,9 @@ def run_engine(corpus_path='', output_path='', stemming=False):
     config = ConfigClass(corpus_path, stemming, output_path)
     r = ReadFile(corpus_path=config.get__corpusPath())
     p = Parse()
-    indexer = Indexer(config)
 
-    documents_list = r.read_next_file()
-    while documents_list:
-
-        # Iterate over every document in the file
-        for idx, document in enumerate(documents_list):
-            # parse the document
-            parsed_document = p.parse_doc(document)
-            number_of_documents += 1
-            # index the document data
-            indexer.add_new_doc(parsed_document)
-        print('Finished parsing and indexing. Starting to export files')
-
-        utils.save_obj(indexer.inverted_idx, "inverted_idx")
-        utils.save_obj(indexer.postingDict, "posting")
-        documents_list = r.read_next_file()
+    tweets_parsed = parse_wrapper(r, p, config)
+    print("total parse {} tweets".format(tweets_parsed))
 
 
 def load_index():
@@ -51,7 +38,7 @@ def search_and_rank_query(query, inverted_index, k):
     return searcher.ranker.retrieve_top_k(ranked_docs, k)
 
 
-def main(corpus_path='', output_path='', stemming=False, queries='', num_docs_to_retrive=0):
+def main(corpus_path='', output_path='.', stemming=False, queries='', num_docs_to_retrive=0):
     run_engine(corpus_path, output_path, stemming)
     # query = input("Please enter a query: ")
     # k = int(input("Please enter number of docs to retrieve: "))

@@ -78,16 +78,6 @@ class Parse:
 
 
 
-        '''''''''
-        hashtaglist = [w for w in text if w[0] == '#']
-
-        #upper case dispute from the words
-        upcases = [[re.findall('[A-Z][^A-Z]*',w[1:]),w] for w in text if w[1].isupper()]
-
-        #punctation dispute from the words
-        pctionltrs = [[re.findall(punctuation,w[1:]),w] for w in text if p in w  for p in punctuation]
-        '''''''''
-
         return terms + upcases
 
 

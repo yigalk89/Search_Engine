@@ -22,3 +22,5 @@ class ConfigClass:
             if not os.path.exists(self.saveFilesWithoutStem):
                 os.makedirs(self.saveFilesWithoutStem)
             return self.saveFilesWithoutStem
+
+

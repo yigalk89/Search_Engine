@@ -16,17 +16,33 @@ class Parse:
     # caring off tags
     def tags(self,text):
 
-        tags=[text[i+1] for i in range(0,len(text)) if text[i] == '@']
+        #tags=[text[i+1] for i in range(0,len(text)) if text[i] == '@']
+
+        tags=[]
+
+        for i in range(0, len(text)):                      #the last term in the document is @
+            if (text[i] == '@' and i == (len(text) - 1)):
+                break
+            if text[i] == '@' and text[i + 1] not in punctuation:                            #add the tag term
+                tags.append("@{}".format(text[i + 1]))
+
+            if (text[i - 1] != '@' and text[i] != '@'):   #add the rest terms in the document
+                tags.append(text[i])
 
         return tags
 
     # caring off percent
-
     def percentage(self,text):
+
         percent = []
-        for i in range(0, len(text)):
-            if text[i] in ['%', 'percent', 'percentage']:
-              percent.append("{}%".format(text[i - 1]))
+        for i in range(0, len(text)):     #the last term in the document are ['%', 'percent', 'percentage']
+            if (text[i] in ['%', 'percent', 'percentage'] and i == (len(text) - 1)):
+                break
+            if text[i] in ['%', 'percent', 'percentage'] and text[i - 1].isdigit():  #add the percent term to document
+                percent.append("{}%".format(text[i - 1]))
+
+            if (text[i] not in ['%', 'percent', 'percentage'] and text[i + 1] not in ['%', 'percent', 'percentage']):  #add the rest terms in the document
+                percent.append(text[i])
 
 
 
@@ -34,61 +50,67 @@ class Parse:
 
     # caring off hashtag
     def hashtag(self,text):
-        #print(text)
-        #hashtaglist = [w for w in text if w[0] == '#']
-        terms = []
-        #print (hashtaglist)
-        trms=[]
-        upcases = []
-        for i in range(0, len(text) - 1):
 
-            if (text[i] == '#'):
-                curren_hashtag = text[i + 1]
-                if (curren_hashtag[
-                    0].isupper() and curren_hashtag != curren_hashtag.isupper()):  # words that seperated by uppercase like #StayAtHome
-                    upcases.append("#{}".format(text[i + 1].lower()))
-                    for w1 in re.findall('[A-Z][^A-Z]*', text[i + 1]):
-                        upcases.append(w1.lower())
-                flag = 'true'
-                sgn = 'true'
-                if (text[i + 1][0].islower() and text[i + 1] != text[
-                    i + 1].islower()):  # words that starts with lowercase like #stayAtHome
-                    cnt1 = 0
-                    indx = 0
-                    for j in curren_hashtag:
-                        if (j.isupper() and sgn == 'true'):
-                            indx = cnt1
-                            sgn = 'false'
-                        cnt1 = cnt1 + 1
-                    if (sgn == 'false'):
-                        terms.append(text[i + 1][0:indx])
-                        for k in re.findall('[A-Z][^A-Z]*', text[i + 1][indx:]):
-                            terms.append(k.lower())
+
+
+
+            terms = []
+            punctutaion1 = ['!', '"', '$', '#', '%', '&', "'", '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=',
+                      '>',
+                      '?', '[', '\\', ']', '^', '_', '`', '{', '|', '}', '~']  ##puncutation
+
+            for i in range(0, len(text)):
+
+                if (text[i] == '#' and i == (len(text) - 1)): # the last term in the document is #
+                    break
+
+                if (text[i] == '#'):
+                    curren_hashtag = text[i + 1]
+
+                    if (curren_hashtag[0].isupper() and curren_hashtag != curren_hashtag.isupper()):  #words that seperated by uppercase like #StayAtHome
                         terms.append("#{}".format(text[i + 1].lower()))
+                        for w1 in re.findall('[A-Z][^A-Z]*', text[i + 1]):
+                            terms.append(w1.lower())
 
-                for j in text[i + 1]:  # words that seperated by puncutation #stay_at_home
-                    if j in punctuation and j not in ['@', '#']:
-                        for k in re.compile(r'[\s{}]+'.format(re.escape(punctuation))).split(text[i + 1]):
-                            terms.append(k.lower())
-                        terms.append("#{}".format(text[i + 1].lower()))
-                        break
+                    if (curren_hashtag.islower() and text[i - 1] != '#'):  #terms that contain only lower letters
+                        terms.append(curren_hashtag)
+                        terms.append("#{}".format(curren_hashtag))
+
+                    if (curren_hashtag.isdigit()):       #terms are digits
+                        terms.append(curren_hashtag)
+                        terms.append("#{}".format(curren_hashtag))
 
 
-          #for i in hashtaglist:
+                    sgn = 'false'
+                    if (text[i + 1][0].islower() and text[i + 1] != text[i + 1].islower()):  # words that starts with lowercase like #stayAtHome
+                        cnt1 = 0
+                        indx = 0
+                        for j in curren_hashtag:
+                            if (j.isupper() and sgn == 'true'):
+                                indx = cnt1
+                                sgn = 'true'
+                            cnt1 = cnt1 + 1
+                        if (sgn == 'true'):
+                            terms.append(text[i + 1][0:indx])
+                            for k in re.findall('[A-Z][^A-Z]*', text[i + 1][indx:]):
+                                terms.append(k.lower())
+                            terms.append("#{}".format(text[i + 1].lower()))
+
+                    for j in text[i + 1]:  #terms that seperated by puncutation
+                        if j in punctutaion1 and j != '#':
+                            for k in re.compile(r'[\s{}]+'.format(re.escape(punctutaion1))).split(text[i + 1]):
+                                terms.append(k.lower())
+                            terms.append("#{}".format(text[i + 1].lower()))
+                            break
+
+                if (text[i - 1] != '#' and text[i] not in punctutaion1):   #add the rest terms in the document
+                    terms.append(text[i])
 
 
 
-        '''''''''
-        hashtaglist = [w for w in text if w[0] == '#']
 
-        #upper case dispute from the words
-        upcases = [[re.findall('[A-Z][^A-Z]*',w[1:]),w] for w in text if w[1].isupper()]
 
-        #punctation dispute from the words
-        pctionltrs = [[re.findall(punctuation,w[1:]),w] for w in text if p in w  for p in punctuation]
-        '''''''''
-
-        return terms + upcases
+            return terms
 
 
     def apply_rules(self, tokens_list):
@@ -111,6 +133,7 @@ class Parse:
             # Check if this token contains a number
             if any(map(str.isdigit, current_token)):
                 next_token = tokens_list[i + 1] if i < tokens_num - 1 else None
+                if next_token is not None: next_token = next_token.lower()
                 next_next_token = tokens_list[i + 2] if i < tokens_num - 2 else None
                 if self.contain_letter(current_token):
                     tokens_to_output.append(current_token)
@@ -263,10 +286,12 @@ class Parse:
             if len(urls_splitted) % 2 != 0: continue
             url_to_parse = urls_splitted[1].replace('\'','').replace('\"','')
             parsed_url = urlparse(url_to_parse)
-            tokens_extracted.append(parsed_url.scheme)
+            # ignoring https prefix
+            # tokens_extracted.append(parsed_url.scheme)
             # handle domain
             if parsed_url.netloc.startswith('www.'):
-                tokens_extracted.append(parsed_url.netloc[:3])
+                # omit the www part
+                # tokens_extracted.append(parsed_url.netloc[:3])
                 tokens_extracted.append(parsed_url.netloc[4:])
             else:
                 tokens_extracted.append(parsed_url.netloc)
@@ -283,7 +308,7 @@ class Parse:
         :return:
         """
         text_tokens = word_tokenize(text)
-        text_tokens_without_stopwords = [w.lower() for w in text_tokens if w not in self.stop_words]
+        text_tokens_without_stopwords = [w for w in text_tokens if w not in self.stop_words]
         return text_tokens_without_stopwords
 
     def parse_doc(self, doc_as_list):
@@ -311,12 +336,12 @@ class Parse:
         # Remove raw URLs from the terms list (they aren't informative, deal with them later in the flaw)
         text_wo_urls = self.remove_raw_urls(full_text, url_indices)
         tokenized_text = self.parse_sentence(text_wo_urls)
-
-        doc_length = len(tokenized_text)  # after text operations.
-
         tokenized_text_w_rules = self.apply_rules(tokenized_text)
-
         tokenized_text_w_rules += self.parse_url_field(url)
+        # filter out punctuation terms
+        tokenized_text_w_rules = [token for token in tokenized_text_w_rules if token not in punctuation]
+
+        doc_length = len(tokenized_text_w_rules)  # after text operations.
 
         for term in tokenized_text_w_rules:
             if term not in term_dict.keys():
@@ -325,5 +350,5 @@ class Parse:
                 term_dict[term] += 1
 
         document = Document(tweet_id, tweet_date, full_text, url, retweet_text, retweet_url, quote_text,
-                            quote_url, term_dict, doc_length)
+                            quote_url, term_dict, doc_length, len(term_dict))
         return document

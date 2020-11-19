@@ -3,7 +3,7 @@ class Indexer:
     def __init__(self, config):
         self.inverted_idx = {}
         self.postingDict = {}
-        self.documentDict = {} # key - doc_id, value - tuple of( max_tf, unique terms in doc)
+        self.documentDict = {}  # key - doc_id, value - tuple of( max_tf, unique terms in doc)
         self.config = config
 
     def add_new_doc(self, document):
@@ -32,3 +32,4 @@ class Indexer:
             except:
                 print('problem with the following key {}'.format(term[0]))
         self.documentDict[document.tweet_id] = (max_tf, document.unique_terms)
+

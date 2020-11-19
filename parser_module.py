@@ -35,13 +35,18 @@ class Parse:
     def percentage(self,text):
 
         percent = []
-        for i in range(0, len(text)):     #the last term in the document are ['%', 'percent', 'percentage']
-            if (text[i] in ['%', 'percent', 'percentage'] and i == (len(text) - 1)):
-                break
-            if text[i] in ['%', 'percent', 'percentage'] and text[i - 1].isdigit():  #add the percent term to document
+
+        for i in range(0, len(text)):  # the last term in the document are ['%', 'percent', 'percentage']
+            if (i == (len(text) - 1)):
+                if (text[i] not in ['%', 'percent', 'percentage']):
+                    percent.append(text[i])
+                    break
+                else:
+                    break
+            if text[i] in ['%', 'percent', 'percentage'] and text[i - 1].isdigit():  # add the percent term to document
                 percent.append("{}%".format(text[i - 1]))
 
-            if (text[i] not in ['%', 'percent', 'percentage'] and text[i + 1] not in ['%', 'percent', 'percentage']):  #add the rest terms in the document
+            if (text[i] not in ['%', 'percent', 'percentage']):  # add the rest terms in the document
                 percent.append(text[i])
 
 

@@ -56,9 +56,6 @@ class Parse:
     # caring off hashtag
     def hashtag(self,text):
 
-
-
-
             terms = []
             punctutaion1 = ['!', '"', '$', '#', '%', '&', "'", '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=',
                       '>',
@@ -112,14 +109,11 @@ class Parse:
                     terms.append(text[i])
 
 
-
-
-
             return terms
 
 
     def apply_rules(self, tokens_list):
-        tokens_list = self.hashtag(tokens_list)
+        # tokens_list = self.hashtag(tokens_list)
         tokens_list = self.tags(tokens_list)
         tokens_list = self.percentage(tokens_list)
         tokens_list = self.parse_numbers(tokens_list)
@@ -316,7 +310,7 @@ class Parse:
         text_tokens_without_stopwords = [w for w in text_tokens if w not in self.stop_words]
         return text_tokens_without_stopwords
 
-    def parse_doc(self, doc_as_list):
+    def parse_doc(self, doc_as_list, steming=False):
         """
         This function takes a tweet document as list and break it into different fields
         :param doc_as_list: list re-preseting the tweet.
@@ -338,14 +332,19 @@ class Parse:
         retweet_quoted_urls = doc_as_list[12]
         retweet_quoted_url_indices = doc_as_list[13]
         term_dict = {}
+
+        #print("full_text: ", full_text)
+        #print("url: ",url)
         # Remove raw URLs from the terms list (they aren't informative, deal with them later in the flaw)
         text_wo_urls = self.remove_raw_urls(full_text, url_indices)
+        text_wo_urls = text_wo_urls.replace('…', ' ')
         tokenized_text = self.parse_sentence(text_wo_urls)
         tokenized_text_w_rules = self.apply_rules(tokenized_text)
         tokenized_text_w_rules += self.parse_url_field(url)
         # filter out punctuation terms
-        tokenized_text_w_rules = [token for token in tokenized_text_w_rules if token not in punctuation]
-
+        punct = punctuation + '’”“‘'
+        tokenized_text_w_rules = [token for token in tokenized_text_w_rules if token not in punct]
+        #print(tokenized_text_w_rules)
         doc_length = len(tokenized_text_w_rules)  # after text operations.
 
         for term in tokenized_text_w_rules:

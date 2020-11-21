@@ -1,5 +1,6 @@
 import contextlib
 import os
+import string
 from concurrent.futures.thread import ThreadPoolExecutor
 import utils
 import multiprocessing
@@ -31,9 +32,14 @@ def parse_and_index(r, p, config, i):
     print('Finished parsing and indexing. Starting to export files. task num {}'.format(i))
     utils.save_obj(indexer.inverted_idx, saving_dir + "/inverted_idx_" + str(i))
     utils.save_obj(indexer.documentDict, saving_dir + "/documentDict_" + str(i))
-    utils.save_obj(indexer.postingDict, saving_dir + "/postingDict_" + str(i))
+    dump_postings(i, indexer.postingDict, saving_dir)
 
     return number_of_documents
+
+
+def dump_postings(task_num, posting_dict, saving_dir):
+    for prefix in posting_dict.keys():
+        utils.save_obj(posting_dict[prefix], saving_dir + "/postingDict_" + prefix + "_" + str(task_num))
 
 
 def merge_indexer(config, files_num):
@@ -69,6 +75,26 @@ def merge_documents_idx(config, files_num):
     return total_docs
 
 
+def merge_posting_letter(saving_dir, prefix, files_num):
+    print("merging posting of prefix {}, files_num: {}".format(prefix, files_num))
+    loading_dir = saving_dir + '/tmp'
+    file_prefix = loading_dir + "/postingDict_" + prefix + "_"
+    merged_letter_posting = {}
+    for i in range(files_num):
+        current_letter_posting = utils.load_obj(file_prefix + str(i))
+        for term, apperances in current_letter_posting.items():
+            if term not in merged_letter_posting.keys():
+                merged_letter_posting[term] = apperances
+            else:
+                merged_letter_posting[term] += apperances
+    for postings_entry in merged_letter_posting.values():
+        postings_entry.sort(key=lambda x: x[0])
+
+    utils.save_obj(merged_letter_posting, saving_dir + "/postingDict_" + prefix)
+    print("saved {} postingDict".format(prefix))
+    return prefix
+
+
 def parse_wrapper(r, p, config):
     files_num = r.get_files_number()
     results = []
@@ -82,9 +108,13 @@ def parse_wrapper(r, p, config):
     pool.join()
 
     # merge index and doc_idx
-    #with contextlib.closing(multiprocessing.Pool(5)) as pool:
     merge_indexer(config, files_num)
     merge_documents_idx(config, files_num)
+    prefixes = list(string.ascii_lowercase) + ["sign"]
 
-    # merge_evrything()
+    with contextlib.closing(multiprocessing.Pool(5)) as pool:
+        for prefix in prefixes:
+            results.append(pool.apply_async(merge_posting_letter, args=(config.get_save_files_dir(), prefix, files_num)))
+    pool.join()
+
     return total_tweets

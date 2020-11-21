@@ -7,13 +7,14 @@ import utils
 import sys
 import os
 from orchestrate_parsing import parse_wrapper
+import datetime as dt
+
 
 def run_engine(corpus_path='', output_path='.', stemming=False):
     """
 
     :return:
     """
-    number_of_documents = 0
 
     config = ConfigClass(corpus_path, stemming, output_path)
     r = ReadFile(corpus_path=config.get__corpusPath())
@@ -39,6 +40,7 @@ def search_and_rank_query(query, inverted_index, k):
 
 
 def main(corpus_path='', output_path='.', stemming=False, queries='', num_docs_to_retrive=0):
+    start = dt.datetime.now()
     run_engine(corpus_path, output_path, stemming)
     # query = input("Please enter a query: ")
     # k = int(input("Please enter number of docs to retrieve: "))
@@ -48,7 +50,9 @@ def main(corpus_path='', output_path='.', stemming=False, queries='', num_docs_t
 
         for doc_tuple in search_and_rank_query(query, inverted_index, k):
             print('tweet id: {}, score (unique common words with query): {}'.format(doc_tuple[0], doc_tuple[1]))
-
+    end = dt.datetime.now()
+    total_time = (end - start).total_seconds()
+    print("Total runing time was {} minutes".format(total_time / 60.0))
 
 if __name__ == "__main__":
     main(*sys.argv[1:])

@@ -1,3 +1,6 @@
+import re
+
+
 class Indexer:
 
     def __init__(self, config):
@@ -19,17 +22,31 @@ class Indexer:
         # Go over each term in the doc
         for term in document_dictionary.keys():
             try:
+                dict_pref = obtain_dict_prefix(term)
                 # Update inverted index and posting
                 if term not in self.inverted_idx.keys():
                     self.inverted_idx[term] = 1
-                    self.postingDict[term] = []
+                    # posting relevant code
+                    # check if the prefix exist and if the term already exist
+                    if dict_pref not in self.postingDict.keys():
+                        self.postingDict[dict_pref] = {}
+
+                    self.postingDict[dict_pref][term] = []
                 else:
                     self.inverted_idx[term] += 1
                 if document_dictionary[term] > max_tf:
                     max_tf = document_dictionary[term]
-                self.postingDict[term].append((document.tweet_id, document_dictionary[term]))
+                self.postingDict[dict_pref][term].append((document.tweet_id, document_dictionary[term]))
 
             except:
                 print('problem with the following key {}'.format(term[0]))
         self.documentDict[document.tweet_id] = (max_tf, document.unique_terms)
 
+
+def obtain_dict_prefix(token):
+    # Also to check in terms of performance
+    # if token[0] in string.ascii_letters:
+    if re.match(r'[A-Za-z]', token[0]):
+        return token[0].lower()
+    else:
+        return 'sign'

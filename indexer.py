@@ -5,6 +5,8 @@ class Indexer:
 
     def __init__(self, config):
         self.inverted_idx = {}
+        self.entities_idx = {}
+        self.entities_posting = {}
         self.postingDict = {}
         self.documentDict = {}  # key - doc_id, value - tuple of( max_tf, unique terms in doc)
         self.config = config
@@ -39,8 +41,28 @@ class Indexer:
                 self.postingDict[dict_pref][term].append((document.tweet_id, document_dictionary[term]))
 
             except:
-                print('problem with the following key {}'.format(term[0]))
+                print('problem with the following key {}'.format(term))
         self.documentDict[document.tweet_id] = (max_tf, document.unique_terms)
+
+        entities_dict = document.entities_dict
+        for term in entities_dict.keys():
+            try:
+                dict_pref = obtain_dict_prefix(term)
+                # Update inverted index and posting
+                if term not in self.entities_idx.keys():
+                    self.entities_idx[term] = 1
+                    # posting relevant code
+                    # check if the prefix exist and if the term already exist
+                    if dict_pref not in self.entities_posting.keys():
+                        self.entities_posting[dict_pref] = {}
+
+                    self.entities_posting[dict_pref][term] = []
+                else:
+                    self.entities_idx[term] += 1
+                self.entities_posting[dict_pref][term].append((document.tweet_id, entities_dict[term]))
+
+            except:
+                print('problem with the following key {}'.format(term))
 
 
 def obtain_dict_prefix(token):

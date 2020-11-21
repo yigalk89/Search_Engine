@@ -1,5 +1,6 @@
 from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
+from nltk import ne_chunk, pos_tag, word_tokenize
+from nltk.tree import Tree
 from document import Document
 from urllib.parse import urlparse
 import re
@@ -300,6 +301,40 @@ class Parse:
             tokens_extracted += filter(None, re.split(regex_pattern, parsed_url.fragment))
         return tokens_extracted
 
+    def find_potential_entities(self, tokens_list):
+        chunked = ne_chunk(pos_tag(tokens_list))
+        continuous_chunk = []
+        current_chunk = []
+        regular_tokens = []
+        for i in chunked:
+            if type(i) == Tree:
+                current_chunk.append(" ".join([token for token, pos in i.leaves()]))
+            if current_chunk:
+                named_entity = " ".join(current_chunk)
+                if named_entity not in continuous_chunk:
+                    continuous_chunk.append(named_entity)
+                    current_chunk = []
+            else:
+                regular_tokens.append(i[0])
+        return regular_tokens, continuous_chunk
+
+    def find_entities(self, token_list):
+        entities = []
+        regular_tokens = []
+        entity_candidate = []
+        for token in token_list:
+            if token[0].isupper():
+                entity_candidate.append(token)
+            else:
+                if len(entity_candidate) > 1:
+                    entity = " ".join(entity_candidate)
+                    entities.append(entity)
+                elif len(entity_candidate) > 0:
+                    regular_tokens += entity_candidate
+                regular_tokens.append(token)
+                entity_candidate = []
+        return regular_tokens, entities
+
     def parse_sentence(self, text):
         """
         This function tokenize, remove stop words and apply lower case for every word within the text
@@ -332,14 +367,15 @@ class Parse:
         retweet_quoted_urls = doc_as_list[12]
         retweet_quoted_url_indices = doc_as_list[13]
         term_dict = {}
-
+        entities_dict = {}
         #print("full_text: ", full_text)
         #print("url: ",url)
-        # Remove raw URLs from the terms list (they aren't informative, deal with them later in the flaw)
+        # Remove raw URLs from the terms list (they aren't informative, deal with them later in the flow)
         text_wo_urls = self.remove_raw_urls(full_text, url_indices)
         text_wo_urls = text_wo_urls.replace('…', ' ')
         tokenized_text = self.parse_sentence(text_wo_urls)
-        tokenized_text_w_rules = self.apply_rules(tokenized_text)
+        tokens_wo_entity, entity_potential = self.find_entities(tokenized_text)
+        tokenized_text_w_rules = self.apply_rules(tokens_wo_entity)
         tokenized_text_w_rules += self.parse_url_field(url)
         # filter out punctuation terms
         punct = punctuation + '’”“‘'
@@ -353,6 +389,12 @@ class Parse:
             else:
                 term_dict[term] += 1
 
+        for term in entity_potential:
+            if term not in entities_dict.keys():
+                entities_dict[term] = 1
+            else:
+                entities_dict[term] += 1
+
         document = Document(tweet_id, tweet_date, full_text, url, retweet_text, retweet_url, quote_text,
-                            quote_url, term_dict, doc_length, len(term_dict))
+                            quote_url, term_dict, doc_length, len(term_dict), entities_dict)
         return document

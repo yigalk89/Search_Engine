@@ -11,8 +11,10 @@ class Parse:
 
     def __init__(self):
         self.stop_words = stopwords.words('english')
+        self.punct = punctuation + "’”“‘"
+        self.punct_larg = ["\"\"", "''", "‘‘", "’’", "``"]
 
-
+    "''"
 
     # caring off tags
     def tags(self,text):
@@ -378,8 +380,8 @@ class Parse:
         tokenized_text_w_rules = self.apply_rules(tokens_wo_entity)
         tokenized_text_w_rules += self.parse_url_field(url)
         # filter out punctuation terms
-        punct = punctuation + '’”“‘'
-        tokenized_text_w_rules = [token for token in tokenized_text_w_rules if token not in punct]
+        tokenized_text_w_rules = [token for token in tokenized_text_w_rules if token not in self.punct]
+        tokenized_text_w_rules = [token for token in tokenized_text_w_rules if token not in self.punct_larg]
         #print(tokenized_text_w_rules)
         doc_length = len(tokenized_text_w_rules)  # after text operations.
 
@@ -398,3 +400,13 @@ class Parse:
         document = Document(tweet_id, tweet_date, full_text, url, retweet_text, retweet_url, quote_text,
                             quote_url, term_dict, doc_length, len(term_dict), entities_dict)
         return document
+
+    def parse_query(self, query, stemming=False):
+        # stemming
+        tokens = self.parse_sentence(query)
+        tokens_wo_entity, entity_potential = self.find_entities(tokens)
+        tokens_w_rules = self.apply_rules(tokens_wo_entity)
+        tokens_w_rules = [token for token in tokens_w_rules if token not in self.punct]
+        tokens_w_rules = [token for token in tokens_w_rules if token not in self.punct_larg]
+        return tokens_w_rules + entity_potential
+

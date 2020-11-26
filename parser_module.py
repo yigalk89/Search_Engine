@@ -5,6 +5,7 @@ from document import Document
 from urllib.parse import urlparse
 import re
 from string import punctuation
+from nltk.corpus import lin_thesaurus as thes
 
 
 class Parse:
@@ -401,11 +402,20 @@ class Parse:
                             quote_url, term_dict, doc_length, len(term_dict), entities_dict)
         return document
 
+    def add_synonyms_to_list(self, tokens_list):
+        out_list = []
+        for token in tokens_list:
+            out_list.append(token)
+            out_list += thes.synonyms(token, fileid="simN.lsp")
+        return out_list
+
+
     def parse_query(self, query, stemming=False):
         # stemming
         tokens = self.parse_sentence(query)
         tokens_wo_entity, entity_potential = self.find_entities(tokens)
-        tokens_w_rules = self.apply_rules(tokens_wo_entity)
+        tokens_w_synonyms = self.add_synonyms_to_list(tokens_wo_entity)
+        tokens_w_rules = self.apply_rules(tokens_w_synonyms)
         tokens_w_rules = [token for token in tokens_w_rules if token not in self.punct]
         tokens_w_rules = [token for token in tokens_w_rules if token not in self.punct_larg]
         return tokens_w_rules + entity_potential

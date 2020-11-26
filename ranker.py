@@ -13,7 +13,31 @@ class Ranker:
     def calc_tf_idf(self, term_freq_in_doc, max_freq_doc, corpus_size, doc_num_for_term):
         return (term_freq_in_doc / max_freq_doc) * math.log2(corpus_size / doc_num_for_term)
 
-    def rank_relevant_doc(self, relevant_doc,  config, query_as_list):
+    def find_term_freq_id_doc(self, doc_id, posting_entry):
+        """
+        This function gets the doc_id and the posting entry for the term and look for the value of the
+        term freq in the specific document.
+        Thi sis binary search so the search will be shorter
+        :return: Term freq of the term that called the function in doc doc_id
+        """
+        size = len(posting_entry)
+        steps = 0
+        start = 0
+        end = len(posting_entry) - 1
+        while start <= end:
+            steps += 1
+            mid = int((start + end) / 2)
+            if posting_entry[mid][0] < doc_id:
+                start = mid + 1
+            elif posting_entry[mid][0] > doc_id:
+                end = mid - 1
+            else:
+                #print("Len was {}, doc_id found in index {}, total steps{}".format(size, mid, steps))
+                return posting_entry[mid][1]
+        #print("Len was {}, doc_id wasn't found, total steps{}".format(size, steps))
+        return 0
+
+    def rank_relevant_doc(self, relevant_doc, config, query_as_list):
         """
         This function provides rank for each relevant document and sorts them by their scores.
         The current score considers solely the number of terms shared by the tweet (full_text) and query.
@@ -29,13 +53,15 @@ class Ranker:
         for doc_id in relevant_doc.keys():
             tf_idf_dict[doc_id] = []
             for term in terms_list:
-                term_freq_in_doc = 0
-                for tuple in self.posting[term]:
-                    if tuple[0] == doc_id:
-                        term_freq_in_doc = tuple[1]
-                        break
+                term_freq_in_doc = self.find_term_freq_id_doc(doc_id, self.posting[term])
+                #term_freq_in_doc = 0
+                #for tuple in self.posting[term]:
+                #    if tuple[0] == doc_id:
+                #        term_freq_in_doc = tuple[1]
+                #        break
                 tf_idf_dict[doc_id].append(
-                self.calc_tf_idf(term_freq_in_doc, documents_dict[doc_id][0], len(documents_dict), len(self.posting[term])))
+                    self.calc_tf_idf(term_freq_in_doc, documents_dict[doc_id][0], len(documents_dict),
+                                     len(self.posting[term])))
         query_tf_idf = []
         quert_posting = {}
         for term in query_as_list:

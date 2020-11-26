@@ -251,7 +251,7 @@ class Parse:
         return token.replace(',', '')
 
     def remove_raw_urls(self, text, indices_str):
-        if indices_str == '[]': return text # 117,140 are prolematic
+        if indices_str == '[]' : return text # 117,140 are prolematic
         out = text
         # convert the string to a list of indices
         indices = indices_str.replace('[', '').replace(']', '').split(',')
@@ -261,6 +261,7 @@ class Parse:
             # obtain the URL start and end indices
             start = int(indices[i*2])
             end = int(indices[i*2 + 1])
+            if start == 117 and end == 140: continue
             # slice the url out of the tweet
             out = out[0:start - offset] + out[end - offset:]
             # update the offset to be the length of the text that was sliced out

@@ -338,9 +338,10 @@ class Parse:
         text_wo_urls = text_wo_urls.replace('…', ' ')
         tokenized_text = self.parse_sentence(text_wo_urls)
         tokens_wo_entity, entity_potential = self.find_entities(tokenized_text)
+
+        tokens_wo_entity += self.parse_url_field(url)
+        tokens_wo_entity += self.parse_url_field(retweet_url)
         tokenized_text_w_rules = self.apply_rules(tokens_wo_entity)
-        tokenized_text_w_rules += self.parse_url_field(url)
-        tokenized_text_w_rules += self.parse_url_field(retweet_url)
         # filter out punctuation terms
         tokenized_text_w_rules = [token for token in tokenized_text_w_rules if token not in self.punct]
         tokenized_text_w_rules = [token for token in tokenized_text_w_rules if token not in self.punct_larg]

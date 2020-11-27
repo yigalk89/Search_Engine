@@ -9,9 +9,11 @@ from reader import ReadFile
 from configuration import ConfigClass
 from parser_module import Parse
 from indexer import Indexer
+import datetime as dt
 
 
 def parse_and_index(r, p, config, i):
+    start = dt.datetime.now()
     number_of_documents = 0
     print("task num: {}".format(i))
     # documents_list = r.read_next_file()
@@ -35,7 +37,9 @@ def parse_and_index(r, p, config, i):
     utils.save_obj(indexer.entities_idx, saving_dir + "/entities_idx_" + str(i))
     dump_postings(i, indexer.postingDict, saving_dir, "postingDict")
     dump_postings(i, indexer.entities_posting, saving_dir, "entitiesDict")
-
+    end = dt.datetime.now()
+    total_task_time = (end - start).total_seconds() / 60.0
+    print("Task {}, total taks time {} minutes".format(i, total_task_time))
     return number_of_documents
 
 

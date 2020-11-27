@@ -1,5 +1,4 @@
-from numpy import dot
-from numpy.linalg import norm
+import numpy as np
 import math
 import utils
 from configuration import ConfigClass
@@ -47,22 +46,22 @@ class Ranker:
         :return: sorted list of documents by score
         """
         documents_dict = utils.load_obj(config.get_save_files_dir() + "/documentDict")
-        terms_list = self.posting.keys()
+        terms_list = list(self.posting.keys())
         tf_idf_dict = {}
 
         for doc_id in relevant_doc.keys():
-            tf_idf_dict[doc_id] = []
-            for term in terms_list:
+            tf_idf_dict[doc_id] = np.zeros(len(terms_list))
+            for i in range(len(terms_list)):
+                term = terms_list[i]
                 term_freq_in_doc = self.find_term_freq_id_doc(doc_id, self.posting[term])
                 #term_freq_in_doc = 0
                 #for tuple in self.posting[term]:
                 #    if tuple[0] == doc_id:
                 #        term_freq_in_doc = tuple[1]
                 #        break
-                tf_idf_dict[doc_id].append(
-                    self.calc_tf_idf(term_freq_in_doc, documents_dict[doc_id][0], len(documents_dict),
-                                     len(self.posting[term])))
-        query_tf_idf = []
+                tf_idf_dict[doc_id][i] = \
+                    self.calc_tf_idf(term_freq_in_doc, documents_dict[doc_id][0], len(documents_dict), len(self.posting[term]))
+
         quert_posting = {}
         for term in query_as_list:
             effective_term = term
@@ -73,13 +72,14 @@ class Ranker:
             else:
                 quert_posting[effective_term] += 1
         max_freq_query = max(quert_posting.values())
-        for term in terms_list:
-            query_tf_idf.append(
-
-                self.calc_tf_idf(quert_posting[term], max_freq_query, len(documents_dict), len(self.posting[term])))
+        query_tf_idf = np.zeros(len(terms_list))
+        for i in range(len(terms_list)):
+            term = terms_list[i]
+            query_tf_idf[i] = \
+                self.calc_tf_idf(quert_posting[term], max_freq_query, len(documents_dict), len(self.posting[term]))
         similarity_dict = {}
         for doc_id, tf_vect in tf_idf_dict.items():
-            similarity_dict[doc_id] = dot(tf_vect, query_tf_idf) / (norm(tf_vect) * norm(query_tf_idf))
+            similarity_dict[doc_id] = np.dot(tf_vect, query_tf_idf) / (np.linalg.norm(tf_vect) * np.linalg.norm(query_tf_idf))
 
         return sorted(similarity_dict.items(), key=lambda item: item[1], reverse=True)
 

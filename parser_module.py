@@ -6,34 +6,59 @@ from urllib.parse import urlparse
 import re
 from string import punctuation
 from nltk.corpus import lin_thesaurus as thes
+from nltk.stem.porter import *
 
 
 class Parse:
 
-    def __init__(self):
+    def __init__(self, to_stem=False):
         self.stop_words = stopwords.words('english')
         self.punct = punctuation + "’”“‘"
         self.punct_larg = ["\"\"", "''", "‘‘", "’’", "``"]
+        self.to_stem = to_stem
+        if to_stem:
+            self.stemmer = PorterStemmer()
 
     "''"
 
     # caring off tags
-    def tags(self,text):
+    def hashtag(self, tokens_list):
+        if len(tokens_list) == 0:
+            return tokens_list
+        out = []
+        found_hashtag = False
+        for i in range(1, len(tokens_list)):
+            if found_hashtag:
+                found_hashtag = False
+                continue
+            if tokens_list[i - 1] == '#':
+                out.append(''.join(tokens_list[i - 1: i + 1]).lower())
+                words = re.findall(r'[A-Z]?[a-z]+', tokens_list[i])
+                out += list(map(lambda x: x.lower(), words))
+                found_hashtag = True
+            else:
+                out.append(tokens_list[i - 1])
+        if not found_hashtag:
+            out.append(tokens_list[len(tokens_list) - 1])
+        return out
 
-        #tags=[text[i+1] for i in range(0,len(text)) if text[i] == '@']
-
-        tags=[]
-
-        for i in range(0, len(text)):                      #the last term in the document is @
-            if (text[i] == '@' and i == (len(text) - 1)):
-                break
-            if text[i] == '@' and text[i + 1] not in punctuation:                            #add the tag term
-                tags.append("@{}".format(text[i + 1]))
-
-            if (text[i - 1] != '@' and text[i] != '@'):   #add the rest terms in the document
-                tags.append(text[i])
-
-        return tags
+    def tags(self, tokens_list):
+        if len(tokens_list) == 0:
+            return tokens_list
+        out = []
+        found_tag = False
+        for i in range(1, (len(tokens_list))):
+            if found_tag:
+                found_tag = False
+                continue
+            if tokens_list[i - 1] == '@':
+                out.append('@{}'.format(tokens_list[i]))
+                found_tag = True
+            else:
+                out.append(tokens_list[i - 1])
+        if not found_tag:
+            out.append(tokens_list[len(tokens_list) - 1])
+        return out
 
     # caring off percent
     def percentage(self,text):
@@ -57,67 +82,10 @@ class Parse:
 
         return percent
 
-    # caring off hashtag
-    def hashtag(self,text):
-
-            terms = []
-            punctutaion1 = ['!', '"', '$', '#', '%', '&', "'", '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=',
-                      '>',
-                      '?', '[', '\\', ']', '^', '_', '`', '{', '|', '}', '~']  ##puncutation
-
-            for i in range(0, len(text)):
-
-                if (text[i] == '#' and i == (len(text) - 1)): # the last term in the document is #
-                    break
-
-                if (text[i] == '#'):
-                    curren_hashtag = text[i + 1]
-
-                    if (curren_hashtag[0].isupper() and curren_hashtag != curren_hashtag.isupper()):  #words that seperated by uppercase like #StayAtHome
-                        terms.append("#{}".format(text[i + 1].lower()))
-                        for w1 in re.findall('[A-Z][^A-Z]*', text[i + 1]):
-                            terms.append(w1.lower())
-
-                    if (curren_hashtag.islower() and text[i - 1] != '#'):  #terms that contain only lower letters
-                        terms.append(curren_hashtag)
-                        terms.append("#{}".format(curren_hashtag))
-
-                    if (curren_hashtag.isdigit()):       #terms are digits
-                        terms.append(curren_hashtag)
-                        terms.append("#{}".format(curren_hashtag))
-
-
-                    sgn = 'false'
-                    if (text[i + 1][0].islower() and text[i + 1] != text[i + 1].islower()):  # words that starts with lowercase like #stayAtHome
-                        cnt1 = 0
-                        indx = 0
-                        for j in curren_hashtag:
-                            if (j.isupper() and sgn == 'true'):
-                                indx = cnt1
-                                sgn = 'true'
-                            cnt1 = cnt1 + 1
-                        if (sgn == 'true'):
-                            terms.append(text[i + 1][0:indx])
-                            for k in re.findall('[A-Z][^A-Z]*', text[i + 1][indx:]):
-                                terms.append(k.lower())
-                            terms.append("#{}".format(text[i + 1].lower()))
-
-                    for j in text[i + 1]:  #terms that seperated by puncutation
-                        if j in punctutaion1 and j != '#':
-                            for k in re.compile(r'[\s{}]+'.format(re.escape(punctutaion1))).split(text[i + 1]):
-                                terms.append(k.lower())
-                            terms.append("#{}".format(text[i + 1].lower()))
-                            break
-
-                if (text[i - 1] != '#' and text[i] not in punctutaion1):   #add the rest terms in the document
-                    terms.append(text[i])
-
-
-            return terms
 
 
     def apply_rules(self, tokens_list):
-        # tokens_list = self.hashtag(tokens_list)
+        tokens_list = self.hashtag(tokens_list)
         tokens_list = self.tags(tokens_list)
         tokens_list = self.percentage(tokens_list)
         tokens_list = self.parse_numbers(tokens_list)
@@ -276,6 +244,7 @@ class Parse:
         :param org_url:
         :return: tokens extracted from urls in a list
         """
+        if org_url is None: return []
         tokens_extracted = []
         # prepare the delimiters we can possibly encounter in url
         delimiters = "/", "-", "_", "=", "?", ",", "&"
@@ -305,22 +274,6 @@ class Parse:
             tokens_extracted += filter(None, re.split(regex_pattern, parsed_url.fragment))
         return tokens_extracted
 
-    def find_potential_entities(self, tokens_list):
-        chunked = ne_chunk(pos_tag(tokens_list))
-        continuous_chunk = []
-        current_chunk = []
-        regular_tokens = []
-        for i in chunked:
-            if type(i) == Tree:
-                current_chunk.append(" ".join([token for token, pos in i.leaves()]))
-            if current_chunk:
-                named_entity = " ".join(current_chunk)
-                if named_entity not in continuous_chunk:
-                    continuous_chunk.append(named_entity)
-                    current_chunk = []
-            else:
-                regular_tokens.append(i[0])
-        return regular_tokens, continuous_chunk
 
     def find_entities(self, token_list):
         entities = []
@@ -339,6 +292,12 @@ class Parse:
                 entity_candidate = []
         return regular_tokens, entities
 
+    def apply_stemming(self, tokens_list):
+        out_list = set()
+        for token in tokens_list:
+            out_list.add(self.stemmer.stem(token))
+        return list(out_list)
+
     def parse_sentence(self, text):
         """
         This function tokenize, remove stop words and apply lower case for every word within the text
@@ -349,7 +308,7 @@ class Parse:
         text_tokens_without_stopwords = [w for w in text_tokens if w not in self.stop_words]
         return text_tokens_without_stopwords
 
-    def parse_doc(self, doc_as_list, steming=False):
+    def parse_doc(self, doc_as_list):
         """
         This function takes a tweet document as list and break it into different fields
         :param doc_as_list: list re-preseting the tweet.
@@ -381,9 +340,12 @@ class Parse:
         tokens_wo_entity, entity_potential = self.find_entities(tokenized_text)
         tokenized_text_w_rules = self.apply_rules(tokens_wo_entity)
         tokenized_text_w_rules += self.parse_url_field(url)
+        tokenized_text_w_rules += self.parse_url_field(retweet_url)
         # filter out punctuation terms
         tokenized_text_w_rules = [token for token in tokenized_text_w_rules if token not in self.punct]
         tokenized_text_w_rules = [token for token in tokenized_text_w_rules if token not in self.punct_larg]
+        if self.to_stem:
+            tokenized_text_w_rules = self.apply_stemming(tokenized_text_w_rules)
         #print(tokenized_text_w_rules)
         doc_length = len(tokenized_text_w_rules)  # after text operations.
 
@@ -407,11 +369,12 @@ class Parse:
         out_list = []
         for token in tokens_list:
             out_list.append(token)
-            out_list += thes.synonyms(token, fileid="simN.lsp")
+            for syn in thes.synonyms(token, fileid="simN.lsp"):
+                out_list.append(syn)
+                break
         return out_list
 
-
-    def parse_query(self, query, stemming=False):
+    def parse_query(self, query):
         # stemming
         tokens = self.parse_sentence(query)
         tokens_wo_entity, entity_potential = self.find_entities(tokens)
@@ -419,5 +382,7 @@ class Parse:
         tokens_w_rules = self.apply_rules(tokens_w_synonyms)
         tokens_w_rules = [token for token in tokens_w_rules if token not in self.punct]
         tokens_w_rules = [token for token in tokens_w_rules if token not in self.punct_larg]
+        if self.to_stem:
+            tokens_w_rules = self.apply_stemming(tokens_w_rules)
         return tokens_w_rules + entity_potential
 

@@ -7,6 +7,7 @@ import utils
 import re
 from orchestrate_parsing import parse_wrapper
 import datetime as dt
+import pandas as pd
 
 
 def run_engine(corpus_path='', output_path='.', stemming=False):
@@ -17,7 +18,7 @@ def run_engine(corpus_path='', output_path='.', stemming=False):
 
     config = ConfigClass(corpus_path, stemming, output_path)
     r = ReadFile(corpus_path=config.get__corpusPath())
-    p = Parse()
+    p = Parse(stemming)
 
     tweets_parsed = parse_wrapper(r, p, config)
     print("total parse {} tweets".format(tweets_parsed))
@@ -30,12 +31,16 @@ def load_index(config):
     return inverted_index
 
 
-def search_and_rank_query(query, inverted_index, k, config, stemming=False):
-    p = Parse()
-    query_as_list = p.parse_query(query, stemming)
+def search_and_rank_query(query, inverted_index, k, config):
+    start = dt.datetime.now()
+    p = Parse(config.toStem)
+    query_as_list = p.parse_query(query)
     searcher = Searcher(inverted_index)
     relevant_docs = searcher.relevant_docs_from_posting(query_as_list, config)
     ranked_docs = searcher.ranker.rank_relevant_doc(relevant_docs, config, query_as_list)
+    end = dt.datetime.now()
+    tot_time = (end - start).total_seconds()/60.0
+    print("Query \"{}\" took {} minutes to analayze".format(query, tot_time))
     return searcher.ranker.retrieve_top_k(ranked_docs, k)
 
 
@@ -58,6 +63,10 @@ def parse_queries_from_file(filename):
 def main(corpus_path='', output_path='.', stemming=False, queries='', num_docs_to_retrive=0):
     start = dt.datetime.now()
     run_engine(corpus_path, output_path, stemming)
+    end = dt.datetime.now()
+    total_parse_and_ind_time = (end - start).total_seconds() / 60.0
+    print("Total parsing and building index and posting time was: {}".format(total_parse_and_ind_time))
+    start = dt.datetime.now()
     k = num_docs_to_retrive
     config = ConfigClass(corpus_path, stemming, output_path)
     inverted_index = load_index(config)
@@ -65,18 +74,25 @@ def main(corpus_path='', output_path='.', stemming=False, queries='', num_docs_t
         queries_list = queries
     else:
         queries_list = parse_queries_from_file(queries)
+    output_set = []
+    for i in range(len(queries_list)):
+        query = queries_list[i]
 
-    for query in queries_list:
         print(query)
-        for doc_tuple in search_and_rank_query(query, inverted_index, k, config, False):
-            print('tweet id: {}, score (TF-idf): {}'.format(doc_tuple[0], doc_tuple[1]))
+        doc_tuples = search_and_rank_query(query, inverted_index, k, config)
+        for j in range(len(doc_tuples)):
+            doc_tuple = doc_tuples[j]
+            output_set.append((i+1, doc_tuple[0], doc_tuple[1]))
+            #print('tweet id: {}, score (TF-idf): {}'.format(doc_tuple[0], doc_tuple[1]))
+    results_set = pd.DataFrame(output_set, columns=['query_num', 'tweet_id', 'tf_score'])
+    results_set.to_csv(output_path + '/results.csv')
     end = dt.datetime.now()
-    total_time = (end - start).total_seconds()
-    print("Total runing time was {} minutes".format(total_time / 60.0))
+    total_query_time = (end - start).total_seconds()
+    print("Total Query time was {} minutes".format(total_query_time / 60.0))
 
 
 
 
 if __name__ == "__main__":
-    main('Data', '.', False, 'queries.txt', 10)
+    main('Data', '.', False, 'queries.txt', 2000)
     #main(*sys.argv[1:])

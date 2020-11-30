@@ -8,8 +8,11 @@ import re
 from string import punctuation
 
 
-
 class Parse:
+    """
+    Class that takes care of transforming a document in full text into a document object with tokens list, metadata
+    about the tokens and details relevant for the inverted index
+    """
 
     def __init__(self, to_stem=False):
         self.stop_words = stopwords.words('english')
@@ -19,30 +22,11 @@ class Parse:
         if to_stem:
             self.stemmer = PorterStemmer()
 
-    "''"
-
-    # caring off tags
-    def hashtag(self, tokens_list):
-        if len(tokens_list) == 0:
-            return tokens_list
-        out = []
-        found_hashtag = False
-        for i in range(1, len(tokens_list)):
-            if found_hashtag:
-                found_hashtag = False
-                continue
-            if tokens_list[i - 1] == '#':
-                out.append(''.join(tokens_list[i - 1: i + 1]).lower())
-                words = re.findall(r'[A-Z]?[a-z]+', tokens_list[i])
-                out += list(map(lambda x: x.lower(), words))
-                found_hashtag = True
-            else:
-                out.append(tokens_list[i - 1])
-        if not found_hashtag:
-            out.append(tokens_list[len(tokens_list) - 1])
-        return out
-
-    def tags(self, tokens_list):
+    @staticmethod
+    def tags(tokens_list):
+        """
+        Returns tokens list with tag rule applied
+        """
         if len(tokens_list) == 0:
             return tokens_list
         out = []
@@ -60,9 +44,44 @@ class Parse:
             out.append(tokens_list[len(tokens_list) - 1])
         return out
 
-    # caring off percent
-    def percentage(self,text):
+    @staticmethod
+    def hashtag(tokens_list):
+        """
+        Traverse the tokens list, and when hashtag encountered save it in the relevant format.
+        Separates the words using capital letters or '_'
+        :param tokens_list: List of tokens that might contain hashtag
+        :return: tokens list wuth all regular tokens kept and all the hastag after aplling the logic
+        """
 
+        if len(tokens_list) == 0:
+            return tokens_list
+        out = []
+        found_hashtag = False
+
+        for i in range(1, len(tokens_list)):
+            # make sure we don't add the term after the # just is it was stored originally
+            if found_hashtag:
+                found_hashtag = False
+                continue
+            # Found a hashtag, parse it
+            if tokens_list[i - 1] == '#':
+                out.append(''.join(tokens_list[i - 1: i + 1]).lower())
+                words = re.findall(r'[A-Z]?[a-z]+', tokens_list[i])
+                out += list(map(lambda x: x.lower(), words))
+                found_hashtag = True
+            else:
+                out.append(tokens_list[i - 1])
+        # Take car of last token in the list
+        if not found_hashtag:
+            out.append(tokens_list[len(tokens_list) - 1])
+        return out
+
+    # caring off percent
+    @staticmethod
+    def percentage(text):
+        """
+        :returns tokens list with percentage rule applied
+        """
         percent = []
 
         for i in range(0, len(text)):  # the last term in the document are ['%', 'percent', 'percentage']
@@ -75,24 +94,19 @@ class Parse:
             if text[i] in ['%', 'percent', 'percentage'] and text[i - 1].isdigit():  # add the percent term to document
                 percent.append("{}%".format(text[i - 1]))
 
-            if (text[i] not in ['%', 'percent', 'percentage']):  # add the rest terms in the document
+            if text[i] not in ['%', 'percent', 'percentage']:  # add the rest terms in the document
                 percent.append(text[i])
-
-
 
         return percent
 
-
-
-    def apply_rules(self, tokens_list):
-        tokens_list = self.hashtag(tokens_list)
-        tokens_list = self.tags(tokens_list)
-        tokens_list = self.percentage(tokens_list)
-        tokens_list = self.parse_numbers(tokens_list)
-
-        return tokens_list
-
     def parse_numbers(self, tokens_list):
+        """
+        extract tokens of numbers and apply the numbers rules on them.
+        Add a suffix for K,M and B. Format to 3 digits after decimal point. Handle fractions if they follow a number
+        Tread dollars.
+        :param tokens_list:
+        :return: tokens list updated with number rules
+        """
         suffix_to_shortcut = {'thousand': 'K', 'million': 'M', 'billion': 'B'}
         suffix_to_number = {'thousand': 1000, 'million': 1000000, 'billion': 1000000000}
         tokens_to_output = []
@@ -168,6 +182,7 @@ class Parse:
                         tokens_iter.__next__()
                     if has_dollar:
                         out_token += '$'
+
                 # Number greater than 1000
                 else:
                     out_token = self.format_num(num_to_evaluate)
@@ -182,44 +197,61 @@ class Parse:
                     i += 1
                 tokens_to_output.append(out_token)
 
-            else:
+            else: # just a non-numeric token
                 tokens_to_output.append(current_token)
             i += 1
         return tokens_to_output
 
-    def format_num(self, num_to_format):
+    @staticmethod
+    def format_num(num_to_format):
+        """
+        Helper function for number parsing that formats the number with relevant suffix and decimal suffix
+        """
         for unit in ['', 'K', 'M', 'B']:
             if abs(num_to_format) < 1000:
                 return "{:.3f}{}".format(num_to_format, unit).replace('.000', '')
             num_to_format /= 1000
         return "{:.3f}{}".format(num_to_format, unit).replace('.000', '')
 
-
-
-    def treat_dollar(self, token):
+    @staticmethod
+    def treat_dollar(token):
+        """
+        helper function that strip a dollar out of the token, and signals it did it
+        """
         if token[:1] == '$':
             return token[1:], True
         elif token[-1:] == '$':
             return token[:-1], True
         else:
-            return token , False
+            return token, False
 
-    def is_suffix(self, token, suffix_list):
+    @staticmethod
+    def is_suffix(token, suffix_list):
         return True if token in suffix_list else False
 
-    def contains_fraction(self, token):
+    @staticmethod
+    def contains_fraction(token):
+        """
+        Helper functions that recognize fraction pattern
+        """
         if token is None: return False
         fraction_pattern = re.compile('(\\d+)(\\s*/\\s*)(\\d+)')
         return bool(fraction_pattern.search(token))
 
-    def contain_letter(self, token):
+    @staticmethod
+    def contain_letter(token):
         return any(map(str.isalpha, token))
 
-    def strip_commas(self, token):
+    @staticmethod
+    def strip_commas(token):
         return token.replace(',', '')
 
-    def remove_raw_urls(self, text, indices_str):
-        if indices_str == '[]' : return text # 117,140 are prolematic
+    @staticmethod
+    def remove_raw_urls(text, indices_str):
+        """
+        Get the text and the url indices and returns the text without the url
+        """
+        if indices_str == '[]' : return text # 117,140 are prolematic and are dealt with later on
         out = text
         # convert the string to a list of indices
         indices = indices_str.replace('[', '').replace(']', '').split(',')
@@ -229,14 +261,15 @@ class Parse:
             # obtain the URL start and end indices
             start = int(indices[i*2])
             end = int(indices[i*2 + 1])
-            if start == 117 and end == 140: continue
+            if start == 117 and end == 140: continue # from data exploration it occurs that 117 and 140 are just wrong
             # slice the url out of the tweet
             out = out[0:start - offset] + out[end - offset:]
             # update the offset to be the length of the text that was sliced out
             offset += end - start
         return out
 
-    def parse_url_field(self, org_url):
+    @staticmethod
+    def parse_url_field(org_url):
         """
         This function get urls from the original data and extract the tokens from them.
         A url is a string of the short and full url. And there could be more than one.
@@ -274,29 +307,58 @@ class Parse:
             tokens_extracted += filter(None, re.split(regex_pattern, parsed_url.fragment))
         return tokens_extracted
 
-
-    def find_entities(self, token_list):
+    @staticmethod
+    def find_entities(token_list):
+        """
+        This function recognizes ponetial entities in the tokens list, when there is a sequence
+        of more than one word that starts with capital letters
+        It returns the regular tokens and the potential entites
+        """
         entities = []
         regular_tokens = []
         entity_candidate = []
+
         for token in token_list:
             if token[0].isupper():
                 entity_candidate.append(token)
             else:
-                if len(entity_candidate) > 1:
+                if len(entity_candidate) > 1: # case there is more than one entity in the sequence,
+                                              # concat then and add to the entities
                     entity = " ".join(entity_candidate)
                     entities.append(entity)
                 elif len(entity_candidate) > 0:
                     regular_tokens += entity_candidate
                 regular_tokens.append(token)
                 entity_candidate = []
+
+        # Check if there were entities in the end of the text
+        if len(entity_candidate) > 1:  # case there is more than one entity in the sequence,
+            # concat then and add to the entities
+            entity = " ".join(entity_candidate)
+            entities.append(entity)
+        elif len(entity_candidate) > 0:
+            regular_tokens += entity_candidate
         return regular_tokens, entities
 
     def apply_stemming(self, tokens_list):
+        """
+        Apply stemming on all the tokens in the tokens list. Return the stemmed tokens list
+        """
         out_list = set()
         for token in tokens_list:
             out_list.add(self.stemmer.stem(token))
         return list(out_list)
+
+    def apply_rules(self, tokens_list):
+        """
+        apply parser rules on the token list
+        """
+        tokens_list = self.hashtag(tokens_list)
+        tokens_list = self.tags(tokens_list)
+        tokens_list = self.percentage(tokens_list)
+        tokens_list = self.parse_numbers(tokens_list)
+
+        return tokens_list
 
     def parse_sentence(self, text):
         """
@@ -333,14 +395,17 @@ class Parse:
         entities_dict = {}
         #print("full_text: ", full_text)
         #print("url: ",url)
+
         # Remove raw URLs from the terms list (they aren't informative, deal with them later in the flow)
         text_wo_urls = self.remove_raw_urls(full_text, url_indices)
         text_wo_urls = text_wo_urls.replace('…', ' ')
         tokenized_text = self.parse_sentence(text_wo_urls)
         tokens_wo_entity, entity_potential = self.find_entities(tokenized_text)
 
+        # Add the relvant info from url and rewteet url field. The url can contain a lot if info about the tweet subject
         tokens_wo_entity += self.parse_url_field(url)
         tokens_wo_entity += self.parse_url_field(retweet_url)
+        # apply all the parser rules on the tokens list
         tokenized_text_w_rules = self.apply_rules(tokens_wo_entity)
         # filter out punctuation terms
         tokenized_text_w_rules = [token for token in tokenized_text_w_rules if token not in self.punct]
@@ -350,6 +415,8 @@ class Parse:
         #print(tokenized_text_w_rules)
         doc_length = len(tokenized_text_w_rules)  # after text operations.
 
+        # build the term dictionary that holds the info about the frequency of the term in document,
+        # and the positional indexing. This goes to the postindDict
         for i in range(len(tokenized_text_w_rules)):
             term = tokenized_text_w_rules[i]
             if term not in term_dict.keys():
@@ -358,6 +425,7 @@ class Parse:
                 term_dict[term][0] += 1
                 term_dict[term][1].append(i)
 
+        # create posting format dictionary for entities potential
         for term in entity_potential:
             if term not in entities_dict.keys():
                 entities_dict[term] = [1, [None]]
@@ -368,7 +436,13 @@ class Parse:
                             quote_url, term_dict, doc_length, len(term_dict), entities_dict)
         return document
 
-    def add_synonyms_to_list(self, tokens_list):
+    @staticmethod
+    def add_synonyms_to_list(tokens_list):
+        """
+        Apply thesaurus synonym addition of one synonym per token in the list. (Performance + results relevance
+        are the motivation to limit to one synonym per token).
+        Returns the new tokens list including the originn and the synonyms
+        """
         out_list = []
         for token in tokens_list:
             out_list.append(token)
@@ -378,7 +452,9 @@ class Parse:
         return out_list
 
     def parse_query(self, query):
-        # stemming
+        """
+        Transform a string that is a query to a tokens list, after apllying all the relevant transformations.
+        """
         tokens = self.parse_sentence(query)
         tokens_wo_entity, entity_potential = self.find_entities(tokens)
         tokens_w_synonyms = self.add_synonyms_to_list(tokens_wo_entity)

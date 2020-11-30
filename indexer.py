@@ -36,8 +36,8 @@ class Indexer:
                     self.postingDict[dict_pref][term] = []
                 else:
                     self.inverted_idx[term] += 1
-                if document_dictionary[term] > max_tf:
-                    max_tf = document_dictionary[term]
+                if document_dictionary[term][0] > max_tf:
+                    max_tf = document_dictionary[term][0]
                 self.postingDict[dict_pref][term].append((document.tweet_id, document_dictionary[term]))
 
             except:

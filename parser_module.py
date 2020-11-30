@@ -1,12 +1,12 @@
 from nltk.corpus import stopwords
-from nltk import ne_chunk, pos_tag, word_tokenize
-from nltk.tree import Tree
+from nltk import  word_tokenize
+from nltk.corpus import lin_thesaurus as thes
+from nltk.stem.porter import *
 from document import Document
 from urllib.parse import urlparse
 import re
 from string import punctuation
-from nltk.corpus import lin_thesaurus as thes
-from nltk.stem.porter import *
+
 
 
 class Parse:
@@ -350,17 +350,19 @@ class Parse:
         #print(tokenized_text_w_rules)
         doc_length = len(tokenized_text_w_rules)  # after text operations.
 
-        for term in tokenized_text_w_rules:
+        for i in range(len(tokenized_text_w_rules)):
+            term = tokenized_text_w_rules[i]
             if term not in term_dict.keys():
-                term_dict[term] = 1
+                term_dict[term] = [1, [i]]
             else:
-                term_dict[term] += 1
+                term_dict[term][0] += 1
+                term_dict[term][1].append(i)
 
         for term in entity_potential:
             if term not in entities_dict.keys():
-                entities_dict[term] = 1
+                entities_dict[term] = [1, [None]]
             else:
-                entities_dict[term] += 1
+                entities_dict[term][0] += 1
 
         document = Document(tweet_id, tweet_date, full_text, url, retweet_text, retweet_url, quote_text,
                             quote_url, term_dict, doc_length, len(term_dict), entities_dict)

@@ -32,7 +32,7 @@ class Ranker:
                 end = mid - 1
             else:
                 #print("Len was {}, doc_id found in index {}, total steps{}".format(size, mid, steps))
-                return posting_entry[mid][1]
+                return posting_entry[mid][1][0]
         #print("Len was {}, doc_id wasn't found, total steps{}".format(size, steps))
         return 0
 
@@ -63,20 +63,23 @@ class Ranker:
                     self.calc_tf_idf(term_freq_in_doc, documents_dict[doc_id][0], len(documents_dict), len(self.posting[term]))
 
         quert_posting = {}
-        for term in query_as_list:
+        for i in range(len(query_as_list)):
+            term = query_as_list[i]
             effective_term = term
             if term not in terms_list:
                 effective_term = term.lower()
             if effective_term not in quert_posting.keys():
-                quert_posting[effective_term] = 1
+                quert_posting[effective_term] = [1, [i]]
             else:
-                quert_posting[effective_term] += 1
-        max_freq_query = max(quert_posting.values())
+                quert_posting[effective_term][0] += 1
+                quert_posting[effective_term][1].append(i)
+        frequencies = [x[0] for x in quert_posting.values()]
+        max_freq_query = max(frequencies)
         query_tf_idf = np.zeros(len(terms_list))
         for i in range(len(terms_list)):
             term = terms_list[i]
             query_tf_idf[i] = \
-                self.calc_tf_idf(quert_posting[term], max_freq_query, len(documents_dict), len(self.posting[term]))
+                self.calc_tf_idf(quert_posting[term][0], max_freq_query, len(documents_dict), len(self.posting[term]))
         similarity_dict = {}
         for doc_id, tf_vect in tf_idf_dict.items():
             similarity_dict[doc_id] = np.dot(tf_vect, query_tf_idf) / (np.linalg.norm(tf_vect) * np.linalg.norm(query_tf_idf))

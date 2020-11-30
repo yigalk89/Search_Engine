@@ -3,6 +3,7 @@ import string
 import utils
 import re
 import matplotlib.pyplot as plt
+import pandas as pd
 
 
 # a + b + c
@@ -20,6 +21,7 @@ def return_total_num_of_terms(stem, number=False):
                 numbers += 1
         return numbers
 
+
 def total_occurrences_of_term_in_corpus():
     terms_occ = {}
     prefixes = list(string.ascii_lowercase) + ["sign"]
@@ -27,7 +29,7 @@ def total_occurrences_of_term_in_corpus():
         filename = "./WithoutStem/postingDict_" + prefix
         relevant_posting = utils.load_obj(filename)
         for term, posting in relevant_posting.items():
-            terms_occ[term] = sum([pair[1] for pair in posting])
+            terms_occ[term] = sum([pair[1][0] for pair in posting])
 
     return sorted(terms_occ.items(), key=lambda item: item[1], reverse=True)
 
@@ -51,6 +53,7 @@ if __name__ == "__main__":
     print("Last 10 common words in corpus are: {}".format(occur_list[-10:]))
     plt.plot([term_and_occ[1] for term_and_occ in occur_list])
     plt.yscale('log')
+    plt.xscale('log')
     plt.savefig("terms_occur.jpg")
 
 

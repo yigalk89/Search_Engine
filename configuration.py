@@ -14,13 +14,14 @@ class ConfigClass:
         return self.corpusPath
 
     def get_save_files_dir(self):
-        if self.toStem:
-            if not os.path.exists(self.saveFilesWithStem):
-                os.makedirs(self.saveFilesWithStem)
-            return self.saveFilesWithStem
-        else:
-            if not os.path.exists(self.saveFilesWithoutStem):
-                os.makedirs(self.saveFilesWithoutStem)
-            return self.saveFilesWithoutStem
+        return self.savedFileMainFolder
+        #if self.toStem:
+        #    if not os.path.exists(self.saveFilesWithStem):
+        #        os.makedirs(self.saveFilesWithStem)
+        #    return self.saveFilesWithStem
+        #else:
+        #    if not os.path.exists(self.saveFilesWithoutStem):
+        #        os.makedirs(self.saveFilesWithoutStem)
+        #    return self.saveFilesWithoutStem
 
 

@@ -54,6 +54,9 @@ if __name__ == "__main__":
     plt.plot([term_and_occ[1] for term_and_occ in occur_list])
     plt.yscale('log')
     plt.xscale('log')
+    plt.title("Zipf's Law comparison")
+    plt.xlabel('Rank')
+    plt.ylabel('Frequency')
     plt.savefig("terms_occur.jpg")
 
 

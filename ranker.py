@@ -74,7 +74,10 @@ class Ranker:
                 query_posting[effective_term][0] += 1
                 query_posting[effective_term][1].append(i)
         frequencies = [x[0] for x in query_posting.values()]
-        max_freq_query = max(frequencies)
+        if len(frequencies) > 0:
+            max_freq_query = max(frequencies)
+        else:
+            max_freq_query = 0
 
         # Build the tf-idf vector for the query
         query_tf_idf = np.zeros(len(terms_list))

@@ -186,7 +186,7 @@ def merge_posting_letter(saving_dir, prefix, files_num, inverted_idx):
 def parse_wrapper(r, p, config):
     """
     This function distribute the work on parsing and merging the temporary outputs to several processes using
-    processes poll.
+    processes pool.
     :param r: Reader class, list the files to read and deal with reading them
     :param p: Parse class, deals with parsing a document
     :param config: Config class, contains info about stemming and where to save files

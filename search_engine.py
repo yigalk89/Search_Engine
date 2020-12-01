@@ -83,7 +83,7 @@ def parse_queries_from_file(filename):
     return queries
 
 
-def main(corpus_path='', output_path='.', stemming=False, queries='', num_docs_to_retrive=0):
+def main(corpus_path='', output_path='.', stemming=False, queries='', num_docs_to_retrive=10):
     """
     This is the main function for the search engine.
     It manages parsing the data, indexing id and running queries on the data.
@@ -123,13 +123,12 @@ def main(corpus_path='', output_path='.', stemming=False, queries='', num_docs_t
         for j in range(len(doc_tuples)):
             doc_tuple = doc_tuples[j]
             output_set.append((i+1, doc_tuple[0], doc_tuple[1]))
-            #print('tweet id: {}, score (TF-idf): {}'.format(doc_tuple[0], doc_tuple[1]))
+            print('tweet id: {}, score (TF-idf cosine similarity): {}'.format(doc_tuple[0], doc_tuple[1]))
     results_set = pd.DataFrame(output_set, columns=['query_num', 'tweet_id', 'tf_score'])
     # Write results to output
-    if stemming:
-        outfile = output_path + '/results_stem.csv'
-    else:
-        outfile = output_path + '/results_no_stem.csv'
+
+    outfile = output_path + '/results.csv'
+
     results_set.to_csv(outfile)
     end = dt.datetime.now()
     total_query_time = (end - start).total_seconds()

@@ -40,7 +40,7 @@ class ReadFile:
     def read_file_at_index(self, i):
         # Read specific file from files list obtained from corpus path
         if i < len(self.files_list):
-            print("reading file {} from index {}".format(self.files_list[i], i))
+            #print("reading file {} from index {}".format(self.files_list[i], i))
             return read_file_entire_path(self.files_list[i])
         return None
 

@@ -54,7 +54,8 @@ class Indexer:
                 self.postingDict[dict_pref][term].append((document.tweet_id, document_dictionary[term]))
 
             except:
-                print('problem with the following key {}'.format(term))
+                continue
+                #print('problem with the following key {}'.format(term))
 
         # Deal with entities dictionary
         entities_dict = document.entities_dict
@@ -77,7 +78,8 @@ class Indexer:
                 self.entities_posting[dict_pref][term].append((document.tweet_id, entities_dict[term]))
 
             except:
-                print('problem with the following key {}'.format(term))
+                continue
+                # print('problem with the following key {}'.format(term))
 
         self.documentDict[document.tweet_id] = (max_tf, document.unique_terms)
 

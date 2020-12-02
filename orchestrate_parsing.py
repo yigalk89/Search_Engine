@@ -21,7 +21,7 @@ def parse_and_index(r, p, config, i):
     """
     start = dt.datetime.now()
     number_of_documents = 0
-    print("task num: {}".format(i))
+    #print("task num: {}".format(i))
     # obtain relevant tweets list
     documents_list = r.read_file_at_index(i)
     indexer = Indexer(config)
@@ -38,7 +38,7 @@ def parse_and_index(r, p, config, i):
     saving_dir = config.get_save_files_dir() + "/tmp"
     if not os.path.exists(saving_dir):
         os.makedirs(saving_dir)
-    print('Finished parsing and indexing. Starting to export files. task num {}'.format(i))
+    #print('Finished parsing and indexing. Starting to export files. task num {}'.format(i))
     utils.save_obj(indexer.inverted_idx, saving_dir + "/inverted_idx_" + str(i))
     utils.save_obj(indexer.documentDict, saving_dir + "/document_dict_" + str(i))
     utils.save_obj(indexer.entities_idx, saving_dir + "/entities_idx_" + str(i))
@@ -46,7 +46,7 @@ def parse_and_index(r, p, config, i):
     dump_postings(i, indexer.entities_posting, saving_dir, "entitiesDict")
     end = dt.datetime.now()
     total_task_time = (end - start).total_seconds() / 60.0
-    print("Task {}, total taks time {} minutes".format(i, total_task_time))
+    #print("Task {}, total taks time {} minutes".format(i, total_task_time))
     return number_of_documents
 
 
@@ -106,7 +106,7 @@ def merge_index(config, files_num):
                 merged_index_after_cap[term] = apperances
 
     total_terms = len(merged_index)
-    print("Total num of terms: {}".format(total_terms))
+    #print("Total num of terms: {}".format(total_terms))
     # Save the merged index to disk
     saving_dir = config.get_save_files_dir()
     utils.save_obj(merged_index_after_cap, saving_dir + "/inverted_index")
@@ -131,7 +131,7 @@ def merge_documents_idx(config, files_num):
             # documents are unique, so doc_id can't appear twice
             merged_docs_idx[doc_id] = doc_data
     total_docs = len(merged_docs_idx)
-    print("Total docs retrived: {}".format(total_docs))
+    #print("Total docs retrived: {}".format(total_docs))
     saving_dir = config.get_save_files_dir()
     utils.save_obj(merged_docs_idx, saving_dir + "/documentDict")
     return total_docs
@@ -149,7 +149,7 @@ def merge_posting_letter(saving_dir, prefix, files_num, inverted_idx):
     :return: Which prefix this task worked on
     """
 
-    print("merging posting of prefix {}, files_num: {}".format(prefix, files_num))
+    #print("merging posting of prefix {}, files_num: {}".format(prefix, files_num))
     loading_dir = saving_dir + '/tmp'
     file_prefix = loading_dir + "/postingDict_" + prefix + "_"
     entities_prefix = loading_dir + "/entitiesDict_" + prefix + "_"
@@ -179,7 +179,7 @@ def merge_posting_letter(saving_dir, prefix, files_num, inverted_idx):
 
     # Save relevant posting dict
     utils.save_obj(merged_letter_posting, saving_dir + "/postingDict_" + prefix)
-    print("saved {} posting dict".format(prefix))
+    #print("saved {} posting dict".format(prefix))
     return prefix
 
 

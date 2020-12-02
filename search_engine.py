@@ -25,7 +25,7 @@ def run_engine(corpus_path='', output_path='.', stemming=False):
     p = Parse(stemming)
 
     tweets_parsed = parse_wrapper(r, p, config)
-    print("total parse {} tweets".format(tweets_parsed))
+    #print("total parse {} tweets".format(tweets_parsed))
 
 
 def load_index(config):
@@ -34,7 +34,7 @@ def load_index(config):
     :param config: config class that holds info about where the index is saved
     :return: inverted index of the corpus
     """
-    print('Load inverted index')
+    #print('Load inverted index')
     folder = config.get_save_files_dir()
     inverted_index = utils.load_obj(folder + "/inverted_index")
     return inverted_index
@@ -57,7 +57,7 @@ def search_and_rank_query(query, inverted_index, k, config):
     ranked_docs = searcher.ranker.rank_relevant_doc(relevant_docs, config, query_as_list)
     end = dt.datetime.now()
     tot_time = (end - start).total_seconds()/60.0
-    print("Query \"{}\" took {} minutes to analayze".format(query, tot_time))
+    #print("Query \"{}\" took {} minutes to analayze".format(query, tot_time))
     return searcher.ranker.retrieve_top_k(ranked_docs, k)
 
 
@@ -100,7 +100,7 @@ def main(corpus_path='', output_path='.', stemming=False, queries='', num_docs_t
     run_engine(corpus_path, output_path, stemming)
     end = dt.datetime.now()
     total_parse_and_ind_time = (end - start).total_seconds() / 60.0
-    print("Total parsing and building index and posting time was: {}".format(total_parse_and_ind_time))
+    #print("Total parsing and building index and posting time was: {}".format(total_parse_and_ind_time))
     start = dt.datetime.now()
     k = num_docs_to_retrive
     config = ConfigClass(corpus_path, stemming, output_path)
@@ -116,14 +116,14 @@ def main(corpus_path='', output_path='.', stemming=False, queries='', num_docs_t
     for i in range(len(queries_list)):
         query = queries_list[i]
 
-        print(query)
+        #print(query)
 
         # quering phase
         doc_tuples = search_and_rank_query(query, inverted_index, k, config)
         for j in range(len(doc_tuples)):
             doc_tuple = doc_tuples[j]
             output_set.append((i+1, doc_tuple[0], doc_tuple[1]))
-            print('tweet id: {}, score (TF-idf cosine similarity): {}'.format(doc_tuple[0], doc_tuple[1]))
+            print('query number:{} tweet id: {}, score (TF-idf cosine similarity): {}'.format(i + 1, doc_tuple[0], doc_tuple[1]))
     results_set = pd.DataFrame(output_set, columns=['query_num', 'tweet_id', 'tf_score'])
     # Write results to output
 
@@ -132,7 +132,7 @@ def main(corpus_path='', output_path='.', stemming=False, queries='', num_docs_t
     results_set.to_csv(outfile)
     end = dt.datetime.now()
     total_query_time = (end - start).total_seconds()
-    print("Total Query time was {} minutes".format(total_query_time / 60.0))
+    #print("Total Query time was {} minutes".format(total_query_time / 60.0))
 
 
 

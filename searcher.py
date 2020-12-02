@@ -55,7 +55,8 @@ class Searcher:
                     else:
                         relevant_docs[doc] += 1
             except:
-                print('term {} not found in posting'.format(term))
+                continue
+                #print('term {} not found in posting'.format(term))
         # save the relevant posting for the use of the ranker
         self.ranker.add_posting(posting)
         return relevant_docs # key doc_id, val num of relevant terms

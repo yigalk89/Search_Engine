@@ -55,7 +55,17 @@ def recall(df, num_of_relevant, single=False, query_number=None):
         :param query_number: Integer/None that tell on what query_number to evaluate precision or None for the entire DataFrame
         :return: Double - The recall
     """
-    pass
+    queries_list = df['query_num']
+    labels = df['label']
+    if single and query_number is not None:
+        relevant_docs = 0
+        for i, q in enumerate(queries_list):
+            if q == query_number:
+                relevant_docs += labels[i]
+        return float(relevant_docs) / num_of_relevant
+
+    return float(sum(labels)) / num_of_relevant
+
 
 
 # precision_at_n(df, 1, 2) == 0.5
@@ -105,8 +115,8 @@ def test_value(func, expected, variables):
 
 test_value(precision, 0.5, [df, True, 1])
 test_value(precision, 0.5, [df, False, None])
-# test_value(recall, 0.5, [df, 2, True, 1])
-# test_value(recall, 0.6, [df, 5, False, None])
+test_value(recall, 0.5, [df, 2, True, 1])
+test_value(recall, 0.6, [df, 5, False, None])
 # test_value(precision_at_n, 0.5, [df, 1, 2])
 # test_value(precision_at_n, 0, [df, 3, 1])
 # test_value(map, 2/3, [df])

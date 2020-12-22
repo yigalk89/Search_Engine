@@ -30,18 +30,15 @@ def precision(df, single=False, query_number=None):
         return float(queries_agg_data[query_number]['relevant_docs']) / queries_agg_data[query_number]['total_retrived']
 
     for i, q in enumerate(queries_list):
-        if (q not in queries_agg_data.keys()):
+        if q not in queries_agg_data.keys():
             queries_agg_data[q] = {'relevant_docs':0, 'total_retrived':0}
         queries_agg_data[q]['total_retrived'] += 1
         queries_agg_data[q]['relevant_docs'] += labels[i]
     precisions = []
-    print(queries_agg_data.values())
     for i, query_agg in enumerate(queries_agg_data.values()):
         precisions.append(float(query_agg['relevant_docs']) / query_agg['total_retrived'])
 
     return sum(precisions) / len(precisions)
-
-
 
 
 # recall(df, 2, True, 1) == 0.5
@@ -88,7 +85,32 @@ def map(df):
         :param df: DataFrame: Contains tweet ids, their scores, ranks and relevance
         :return: Double: the average precision of the df
     """
-    pass
+    queries_list = df['query_num']
+    labels = df['label']
+    queries_agg_data = {}
+    avgs = []
+    for i, q in enumerate(queries_list):
+        if q not in queries_agg_data.keys():
+            queries_agg_data[q] = []
+
+        queries_agg_data[q].append(labels[i])
+
+    for labels_for_query in queries_agg_data.values():
+        query_total_prec = 0
+        query_total_pos = 0
+        for j, label in enumerate(labels_for_query):
+            if label == 1:
+                query_total_pos += 1
+                query_total_prec += float(query_total_pos) / (j + 1)
+        if 0 == query_total_pos:
+            avgs.append(0)
+        else:
+            avgs.append(query_total_prec / query_total_pos)
+    if 0 == len(avgs) : return 0
+    return sum(avgs) / len(avgs)
+
+
+
 
 
 def test_value(func, expected, variables):
@@ -119,7 +141,7 @@ test_value(recall, 0.5, [df, 2, True, 1])
 test_value(recall, 0.6, [df, 5, False, None])
 # test_value(precision_at_n, 0.5, [df, 1, 2])
 # test_value(precision_at_n, 0, [df, 3, 1])
-# test_value(map, 2/3, [df])
+test_value(map, 2/3, [df])
 #
 for res in results:
     print(res)

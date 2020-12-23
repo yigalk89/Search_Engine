@@ -86,7 +86,16 @@ def precision_at_n(df, query_number=1, n=5):
         :param n: Total document to splice from the df
         :return: Double: The precision of those n documents
     """
-    pass
+    queries_list = df['query_num']
+    labels = df['label']
+    rel_docs = 0
+    query_total = 0
+    for i, q in enumerate(queries_list):
+        if q == query_number:
+            query_total += 1
+            rel_docs += labels[i]
+        if query_total == n:
+            return float(rel_docs) / n
 
 
 # map(df) == 2/3
@@ -150,8 +159,8 @@ test_value(precision, 0.5, [df, True, 1])
 test_value(precision, 0.5, [df, False, None])
 test_value(recall, 0.5, [df, {1: 2}])
 test_value(recall, 0.388, [df, {1: 2, 2: 3, 3: 1}])
-#test_value(precision_at_n, 0.5, [df, 1, 2])
-#test_value(precision_at_n, 0, [df, 3, 1])
+test_value(precision_at_n, 0.5, [df, 1, 2])
+test_value(precision_at_n, 0, [df, 3, 1])
 test_value(map, 2 / 3, [df])
 #
 for res in results:

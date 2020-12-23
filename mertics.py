@@ -41,9 +41,9 @@ def precision(df, single=False, query_number=None):
     return sum(precisions) / len(precisions)
 
 
-# recall(df, 2, True, 1) == 0.5
-# recall(df, 5, False, None) == 0.6
-def recall(df, num_of_relevant, single=False, query_number=None):
+# recall(df, {1:2}, True) == 0.5
+# recall(df, {1:2, 2:3, 3:1}, False) == 0.388
+def recall(df, num_of_relevant):
     """
         This function will calculate the recall of a specific query or of the entire DataFrame
         :param df: DataFrame: Contains tweet ids, their scores, ranks and relevance
@@ -54,14 +54,25 @@ def recall(df, num_of_relevant, single=False, query_number=None):
     """
     queries_list = df['query_num']
     labels = df['label']
-    if single and query_number is not None:
+    if 1 == len(num_of_relevant.values()):
+        query_number = list(num_of_relevant.keys())[0]
         relevant_docs = 0
         for i, q in enumerate(queries_list):
             if q == query_number:
                 relevant_docs += labels[i]
-        return float(relevant_docs) / num_of_relevant
+        return float(relevant_docs) / list(num_of_relevant.values())[0]
+    else:
+        queries_rel_found = {}
+        for i, q in enumerate(queries_list):
+            if q not in queries_rel_found.keys():
+                queries_rel_found[q] = 0
+            queries_rel_found[q] += labels[i]
+        recalls = []
+        for q, r in queries_rel_found.items():
+            cur_recall = float(r) / num_of_relevant[q] if num_of_relevant[q] > 0 else 0
+            recalls.append(cur_recall)
+        return sum(recalls) / len(recalls)
 
-    return float(sum(labels)) / num_of_relevant
 
 
 
@@ -78,7 +89,7 @@ def precision_at_n(df, query_number=1, n=5):
     pass
 
 
-# map(df) == 0.5
+# map(df) == 2/3
 def map(df):
     """
         This function will calculate the mean precision of all the df.
@@ -137,11 +148,11 @@ def test_value(func, expected, variables):
 
 test_value(precision, 0.5, [df, True, 1])
 test_value(precision, 0.5, [df, False, None])
-test_value(recall, 0.5, [df, 2, True, 1])
-test_value(recall, 0.6, [df, 5, False, None])
-# test_value(precision_at_n, 0.5, [df, 1, 2])
-# test_value(precision_at_n, 0, [df, 3, 1])
-test_value(map, 2/3, [df])
+test_value(recall, 0.5, [df, {1: 2}])
+test_value(recall, 0.388, [df, {1: 2, 2: 3, 3: 1}])
+#test_value(precision_at_n, 0.5, [df, 1, 2])
+#test_value(precision_at_n, 0, [df, 3, 1])
+test_value(map, 2 / 3, [df])
 #
 for res in results:
     print(res)

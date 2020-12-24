@@ -1,4 +1,5 @@
 import pandas as pd
+from functools import reduce
 
 df = pd.DataFrame(
     {'query_num': [1, 1, 2, 2, 3], 'Tweet_id': [12345, 12346, 12347, 12348, 12349], 'label': [1, 0, 1, 1, 0]})

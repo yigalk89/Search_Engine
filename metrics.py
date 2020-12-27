@@ -2,7 +2,8 @@ import pandas as pd
 from functools import reduce
 
 df = pd.DataFrame(
-    {'query_num': [1, 1, 2, 2, 3], 'Tweet_id': [12345, 12346, 12347, 12348, 12349], 'label': [1, 0, 1, 1, 0]})
+    {'query': [1, 1, 2, 2, 3], 'tweet': [12345, 12346, 12347, 12348, 12349], 'label': [1, 0, 1, 1, 0]})
+#df = pd.read_csv('../Part2/310282025.csv')
 
 test_number = 0
 results = []
@@ -18,7 +19,7 @@ def precision(df, single=False, query_number=None):
         :param query_number: Integer/None that tell on what query_number to evaluate precision or None for the entire DataFrame
         :return: Double - The precision
     """
-    queries_list = df['query_num']
+    queries_list = df['query']
     labels = df['label']
     queries_agg_data = {}
 
@@ -28,7 +29,9 @@ def precision(df, single=False, query_number=None):
             if q == query_number:
                 queries_agg_data[query_number]['total_retrived'] += 1
                 queries_agg_data[query_number]['relevant_docs'] += labels[i]
-        return float(queries_agg_data[query_number]['relevant_docs']) / queries_agg_data[query_number]['total_retrived']
+        res = float(queries_agg_data[query_number]['relevant_docs']) / queries_agg_data[query_number]['total_retrived'] \
+            if queries_agg_data[query_number]['total_retrived'] > 0 else 0
+        return res
 
     for i, q in enumerate(queries_list):
         if q not in queries_agg_data.keys():
@@ -37,9 +40,12 @@ def precision(df, single=False, query_number=None):
         queries_agg_data[q]['relevant_docs'] += labels[i]
     precisions = []
     for i, query_agg in enumerate(queries_agg_data.values()):
-        precisions.append(float(query_agg['relevant_docs']) / query_agg['total_retrived'])
+        res = float(query_agg['relevant_docs']) / query_agg['total_retrived'] if \
+            query_agg['total_retrived'] > 0 else 0
+        precisions.append(res)
 
-    return sum(precisions) / len(precisions)
+    res = sum(precisions) / len(precisions) if len(precisions) > 0 else 0
+    return res
 
 
 # recall(df, {1:2}, True) == 0.5
@@ -53,7 +59,7 @@ def recall(df, num_of_relevant):
         :param query_number: Integer/None that tell on what query_number to evaluate precision or None for the entire DataFrame
         :return: Double - The recall
     """
-    queries_list = df['query_num']
+    queries_list = df['query']
     labels = df['label']
     if 1 == len(num_of_relevant.values()):
         query_number = list(num_of_relevant.keys())[0]
@@ -61,18 +67,22 @@ def recall(df, num_of_relevant):
         for i, q in enumerate(queries_list):
             if q == query_number:
                 relevant_docs += labels[i]
-        return float(relevant_docs) / list(num_of_relevant.values())[0]
+        res = float(relevant_docs) / list(num_of_relevant.values())[0] if \
+            list(num_of_relevant.values())[0] > 0 else 0
+        return res
     else:
         queries_rel_found = {}
         for i, q in enumerate(queries_list):
             if q not in queries_rel_found.keys():
                 queries_rel_found[q] = 0
-            queries_rel_found[q] += labels[i]
+            if labels[i] > 0:
+                queries_rel_found[q] += 1
         recalls = []
-        for q, r in queries_rel_found.items():
-            cur_recall = float(r) / num_of_relevant[q] if num_of_relevant[q] > 0 else 0
+        for q, r in num_of_relevant.items():
+            cur_recall = float(queries_rel_found[q]) / r if r > 0 else 0
             recalls.append(cur_recall)
-        return sum(recalls) / len(recalls)
+        res = sum(recalls) / len(recalls) if len(recalls) > 0 else 0
+        return res
 
 
 
@@ -87,7 +97,7 @@ def precision_at_n(df, query_number=1, n=5):
         :param n: Total document to splice from the df
         :return: Double: The precision of those n documents
     """
-    queries_list = df['query_num']
+    queries_list = df['query']
     labels = df['label']
     rel_docs = 0
     query_total = 0
@@ -96,8 +106,12 @@ def precision_at_n(df, query_number=1, n=5):
             query_total += 1
             rel_docs += labels[i]
         if query_total == n:
-            return float(rel_docs) / n
-
+            if n > 0:
+                return float(rel_docs) / n
+    if query_total > 0:
+        return float(rel_docs) / query_total
+    else:
+        return 0
 
 # map(df) == 2/3
 def map(df):
@@ -106,7 +120,7 @@ def map(df):
         :param df: DataFrame: Contains tweet ids, their scores, ranks and relevance
         :return: Double: the average precision of the df
     """
-    queries_list = df['query_num']
+    queries_list = df['query']
     labels = df['label']
     queries_agg_data = {}
     avgs = []
@@ -157,6 +171,7 @@ def test_value(func, expected, variables):
 
 
 test_value(precision, 0.5, [df, True, 1])
+test_value(precision, 0, [df, True, 4])
 test_value(precision, 0.5, [df, False, None])
 test_value(recall, 0.5, [df, {1: 2}])
 test_value(recall, 0.388, [df, {1: 2, 2: 3, 3: 1}])

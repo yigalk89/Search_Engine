@@ -1,3 +1,4 @@
+import utils
 # DO NOT MODIFY CLASS NAME
 class Indexer:
     # DO NOT MODIFY THIS SIGNATURE
@@ -41,7 +42,7 @@ class Indexer:
         Input:
             fn - file name of pickled index.
         """
-        raise NotImplementedError
+        self.inverted_idx, self.postingDict = utils.load_obj(fn)
 
     # DO NOT MODIFY THIS SIGNATURE
     # You can change the internal implementation as you see fit.
@@ -51,7 +52,7 @@ class Indexer:
         Input:
               fn - file name of pickled index.
         """
-        raise NotImplementedError
+        utils.save_obj([self.inverted_idx, self.postingDict], fn)
 
     # feel free to change the signature and/or implementation of this function 
     # or drop altogether.

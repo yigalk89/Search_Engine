@@ -38,6 +38,9 @@ class SearchEngine:
             number_of_documents += 1
             # index the document data
             self._indexer.add_new_doc(parsed_document)
+
+        self._indexer.treat_cap_and_entities()
+
         print('Finished parsing and indexing.')
 
     # DO NOT MODIFY THIS SIGNATURE

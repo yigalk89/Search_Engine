@@ -1,4 +1,5 @@
 from nltk.corpus import stopwords
+from nltk.corpus import wordnet
 from nltk import  word_tokenize
 from nltk.corpus import lin_thesaurus as thes
 from nltk.stem.porter import *
@@ -6,6 +7,7 @@ from document import Document
 from urllib.parse import urlparse
 import re
 from string import punctuation
+from spellchecker import SpellChecker
 
 
 class Parse:
@@ -14,13 +16,14 @@ class Parse:
     about the tokens and details relevant for the inverted index
     """
 
-    def __init__(self, to_stem=False):
+    def __init__(self, aug_meth = None, to_stem=True):
         self.stop_words = stopwords.words('english')
         self.punct = punctuation + "’”“‘"
         self.punct_larg = ["\"\"", "''", "‘‘", "’’", "``"]
         self.to_stem = to_stem
         if to_stem:
             self.stemmer = PorterStemmer()
+        self.aug_meth = aug_meth
 
     @staticmethod
     def tags(tokens_list):
@@ -436,8 +439,18 @@ class Parse:
                             quote_url, term_dict, doc_length, len(term_dict), entities_dict)
         return document
 
-    @staticmethod
-    def add_synonyms_to_list(tokens_list):
+    def find_one_synonym(self, keyword):
+        if self.aug_meth == 'thes':
+            for syn in thes.synonyms(keyword, fileid="simN.lsp"):
+                return [syn]
+        elif self.aug_meth == 'wordnet':
+            for synset in wordnet.synsets(keyword):
+                for lemma in synset.lemmas():
+                    if lemma.name() != keyword and lemma.name().lower() != keyword: return [lemma.name()]
+
+        return []
+
+    def add_synonyms_to_list(self, tokens_list):
         """
         Apply thesaurus synonym addition of one synonym per token in the list. (Performance + results relevance
         are the motivation to limit to one synonym per token).
@@ -446,10 +459,16 @@ class Parse:
         out_list = []
         for token in tokens_list:
             out_list.append(token)
-            for syn in thes.synonyms(token, fileid="simN.lsp"):
-                out_list.append(syn)
-                break
+            out_list += self.find_one_synonym(token)
         return out_list
+
+    @staticmethod
+    def spelling_correction(tokens_list):
+        spell = SpellChecker()
+        tokens_out = []
+        for token in tokens_list:
+            tokens_out.append(spell.correction(token))
+        return tokens_out
 
     def parse_query(self, query):
         """
@@ -457,8 +476,10 @@ class Parse:
         """
         tokens = self.parse_sentence(query)
         tokens_wo_entity, entity_potential = self.find_entities(tokens)
-        tokens_w_synonyms = self.add_synonyms_to_list(tokens_wo_entity)
-        tokens_w_rules = self.apply_rules(tokens_w_synonyms)
+        tokens_after_query_man = self.add_synonyms_to_list(tokens_wo_entity)
+        if self.aug_meth == 'spel':
+            tokens_after_query_man = self.spelling_correction(tokens_after_query_man)
+        tokens_w_rules = self.apply_rules(tokens_after_query_man)
         tokens_w_rules = [token for token in tokens_w_rules if token not in self.punct]
         tokens_w_rules = [token for token in tokens_w_rules if token not in self.punct_larg]
         if self.to_stem:

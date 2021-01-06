@@ -33,8 +33,13 @@ class Searcher:
 
         relevant_docs = self._relevant_docs_from_posting(query_as_list)
         n_relevant = len(relevant_docs)
-        ranked_doc_ids = Ranker.rank_relevant_docs(relevant_docs)
-        return n_relevant, ranked_doc_ids
+        ranked_doc_ids = self._ranker.rank_relevant_docs(relevant_docs, query_as_list, self._indexer)
+        if k:
+            ret = self._ranker.retrieve_top_k(ranked_doc_ids, k)
+            n_relevant = len(ret)
+        else:
+            ret = ranked_doc_ids
+        return n_relevant, ret
 
     # feel free to change the signature and/or implementation of this function 
     # or drop altogether.
@@ -44,10 +49,29 @@ class Searcher:
         :param query_as_list: parsed query tokens
         :return: dictionary of relevant documents mapping doc_id to document frequency.
         """
+        posting = {}
+        for term in query_as_list:
+            if term in self._indexer.inverted_idx.keys():
+                posting[term] = self._indexer.postingDict[term]
+            elif term.lower() in self._indexer.inverted_idx.keys():
+                posting[term.lower()] = self._indexer.postingDict[term.lower()]
+
         relevant_docs = {}
         for term in query_as_list:
-            posting_list = self._indexer.get_term_posting_list(term)
-            for doc_id, tf in posting_list:
-                df = relevant_docs.get(doc_id, 0)
-                relevant_docs[doc_id] = df + 1
+            try:
+                if term.lower() in posting.keys():
+                    posting_doc = posting[term.lower()]
+                else:
+                    posting_doc = posting[term]
+                for doc_tuple in posting_doc:
+                    doc = doc_tuple[0]
+                    if doc not in relevant_docs.keys():
+                        relevant_docs[doc] = 1
+                    else:
+                        relevant_docs[doc] += 1
+            except:
+                continue
+                # print('term {} not found in posting'.format(term))
+            # save the relevant posting for the use of the ranker
+        self._ranker.add_posting(posting)
         return relevant_docs

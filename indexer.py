@@ -118,10 +118,10 @@ class Indexer:
             else: # case it contains uppercase
                 if term.lower() in self.inverted_idx:
                     new_idx[term.lower()] = val
-                    new_posting[term.lower] = self.postingDict[term]
+                    new_posting[term.lower()] = self.postingDict[term]
                 else:
                     new_idx[term.upper()] = val
-                    new_posting[term.upper] = self.postingDict[term]
+                    new_posting[term.upper()] = self.postingDict[term]
 
         # Add entities potential that appear more than twice
         for term, val in self.entities_idx.items():

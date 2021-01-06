@@ -73,5 +73,4 @@ class Searcher:
                 continue
                 # print('term {} not found in posting'.format(term))
             # save the relevant posting for the use of the ranker
-        self._ranker.add_posting(posting)
         return relevant_docs

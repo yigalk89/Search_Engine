@@ -53,18 +53,7 @@ class Ranker:
         return [d[0] for d in ranked_results]
         """
         documents_dict = indexer.documentDict
-        terms_list = list(self.posting.keys())
-        tf_idf_dict = {}
-
-        # build a dictionary of doc_id: tf-idf vector
-        for doc_id in relevant_docs.keys():
-            tf_idf_dict[doc_id] = np.zeros(len(terms_list))
-            for i in range(len(terms_list)):
-                term = terms_list[i]
-                term_freq_in_doc = self.find_term_freq_id_doc(doc_id, self.posting[term])
-                tf_idf_dict[doc_id][i] = \
-                    self.calc_tf_idf(term_freq_in_doc, documents_dict[doc_id][0], len(documents_dict),
-                                     len(self.posting[term]))
+        terms_list = list(indexer.postingDict.keys())
 
         # Build a query posting
         query_posting = {}
@@ -85,13 +74,18 @@ class Ranker:
 
         # Build the tf-idf vector for the query
         query_tf_idf = np.zeros(len(terms_list))
-        for i in range(len(terms_list)):
-            term = terms_list[i]
-            query_tf_idf[i] = \
-                self.calc_tf_idf(query_posting[term][0], max_freq_query, len(documents_dict), len(self.posting[term]))
+        for term in terms_list:
+            if term in query_posting.keys():
+                query_tf_idf[indexer.term_to_idx[term]] = \
+                    self.calc_tf_idf(query_posting[term][0], max_freq_query,
+                                     len(documents_dict), len(indexer.postingDict[term]))
+            else:
+                query_tf_idf[indexer.term_to_idx[term]] = 0
+
         # build the similarity dictionary between the query and doc_id
         similarity_dict = {}
-        for doc_id, tf_vect in tf_idf_dict.items():
+        for doc_id in relevant_docs:
+            tf_vect = indexer.tf_idf[doc_id]
             similarity_dict[doc_id] = np.dot(tf_vect, query_tf_idf) / (
                         np.linalg.norm(tf_vect) * np.linalg.norm(query_tf_idf))
 

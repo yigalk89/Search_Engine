@@ -1,4 +1,6 @@
 import utils
+import numpy as np
+import math
 # DO NOT MODIFY CLASS NAME
 class Indexer:
     # DO NOT MODIFY THIS SIGNATURE
@@ -11,6 +13,8 @@ class Indexer:
 
         self.entities_idx = {}
         self.entities_posting = {}
+        self.tf_idf = {}
+        self.term_to_idx = {}
 
     # DO NOT MODIFY THIS SIGNATURE
     # You can change the internal implementation as you see fit.
@@ -70,7 +74,7 @@ class Indexer:
         Input:
             fn - file name of pickled index.
         """
-        self.inverted_idx, self.postingDict, self.postingDict = utils.load_obj(fn)
+        self.inverted_idx, self.postingDict, self.term_to_idx, self.tf_idf = utils.load_obj(fn)
 
     # DO NOT MODIFY THIS SIGNATURE
     # You can change the internal implementation as you see fit.
@@ -80,7 +84,7 @@ class Indexer:
         Input:
               fn - file name of pickled index.
         """
-        utils.save_obj([self.inverted_idx, self.postingDict, self.documentDict], fn)
+        utils.save_obj([self.inverted_idx, self.postingDict, self.term_to_idx, self.tf_idf], fn)
 
     # feel free to change the signature and/or implementation of this function 
     # or drop altogether.
@@ -133,5 +137,33 @@ class Indexer:
         for posting_entry in new_posting.values():
             posting_entry.sort(key=lambda x: x[0])
 
+        if len(new_idx.keys()) != len(new_posting.keys()):
+            raise Exception(f"new idx and new postings aren't the same length. New index is: {len(new_idx.keys())} "\
+            f"new posting is: {len(new_posting.keys())}")
         self.inverted_idx = new_idx
         self.postingDict = new_posting
+
+    @staticmethod
+    def calc_tf_idf(term_freq_in_doc, max_freq_doc, corpus_size, doc_num_for_term):
+        """
+        Calculate the tf-idf for a term.
+        """
+        return (term_freq_in_doc / max_freq_doc) * math.log2(corpus_size / doc_num_for_term)
+
+    def create_tf_idf(self):
+        term_to_idx_dict = {}
+        for i, term in enumerate(self.inverted_idx.keys()):
+            term_to_idx_dict[term] = i
+
+        tf_idf_vector_per_doc_id = {}
+        terms_num = len(self.inverted_idx.keys())
+        for doc_id in self.documentDict.keys():
+            tf_idf_vector_per_doc_id[doc_id] = np.zeros(terms_num)
+        for term, posting in self.postingDict.items():
+            for post_entry in posting:
+                doc_id = post_entry[0]
+                term_freq_in_doc = post_entry[1][0]
+                tf_idf_vector_per_doc_id[doc_id][term_to_idx_dict[term]] = \
+                    self.calc_tf_idf(term_freq_in_doc, self.documentDict[doc_id][0], terms_num, len(posting))
+        self.tf_idf = tf_idf_vector_per_doc_id
+        self.term_to_idx = term_to_idx_dict

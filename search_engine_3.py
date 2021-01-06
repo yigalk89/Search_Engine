@@ -40,6 +40,7 @@ class SearchEngine:
             self._indexer.add_new_doc(parsed_document)
 
         self._indexer.treat_cap_and_entities()
+        self._indexer.create_tf_idf()
 
         print('Finished parsing and indexing.')
 

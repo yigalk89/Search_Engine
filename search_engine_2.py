@@ -40,6 +40,7 @@ class SearchEngine:
             self._indexer.add_new_doc(parsed_document)
 
         self._indexer.treat_cap_and_entities()
+        self._indexer.create_tf_idf()
 
         print('Finished parsing and indexing.')
 
@@ -52,6 +53,7 @@ class SearchEngine:
             fn - file name of pickled index.
         """
         self._indexer.load_index(fn)
+
 
     # DO NOT MODIFY THIS SIGNATURE
     # You can change the internal implementation as you see fit.

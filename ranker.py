@@ -88,7 +88,12 @@ class Ranker:
         # build the similarity dictionary between the query and doc_id
         similarity_dict = {}
         for doc_id, tf_vect in tf_idf_dict.items():
-            similarity_dict[doc_id] = np.dot(tf_vect, query_tf_idf) / (np.linalg.norm(tf_vect) * np.linalg.norm(query_tf_idf))
+            tf_v_size =  np.linalg.norm(tf_vect)
+            quer_size =  np.linalg.norm(query_tf_idf)
+            if tf_v_size == 0 or quer_size == 0:
+                similarity_dict[doc_id] = 0
+            else:
+                similarity_dict[doc_id] = np.dot(tf_vect, query_tf_idf) / (tf_v_size *quer_size)
 
         return sorted(similarity_dict.items(), key=lambda item: item[1], reverse=True)
 

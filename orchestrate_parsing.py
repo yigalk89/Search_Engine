@@ -157,21 +157,26 @@ def merge_posting_letter(saving_dir, prefix, files_num, inverted_idx):
 
     # Merge all the posting entries
     for i in range(files_num):
-        current_letter_posting = utils.load_obj(file_prefix + str(i))
-        for term, apperances in current_letter_posting.items():
-            if term in merged_letter_posting.keys(): # already found term
-                merged_letter_posting[term] += apperances
-            else:
-                if term in inverted_idx.keys(): # term capital that is valid, or a lower one
-                    merged_letter_posting[term] = apperances
-                else: # capital term candidate that haven't made it, will be lowered
-                    merged_letter_posting[term.lower()] = apperances
+        try:
+            current_letter_posting = utils.load_obj(file_prefix + str(i))
+            for term, apperances in current_letter_posting.items():
+                if term in merged_letter_posting.keys(): # already found term
+                    merged_letter_posting[term] += apperances
+                else:
+                    if term in inverted_idx.keys(): # term capital that is valid, or a lower one
+                        merged_letter_posting[term] = apperances
+                    else: # capital term candidate that haven't made it, will be lowered
+                        merged_letter_posting[term.lower()] = apperances
 
-        # load entities_posting and merge it
-        curent_entity_posting = utils.load_obj(entities_prefix + str(i))
-        for term, apperances in curent_entity_posting.items():
-            if term in inverted_idx.keys():  # Valid entity
-                merged_letter_posting[term] = apperances
+
+
+            # load entities_posting and merge it
+            curent_entity_posting = utils.load_obj(entities_prefix + str(i))
+            for term, apperances in curent_entity_posting.items():
+                if term in inverted_idx.keys():  # Valid entity
+                    merged_letter_posting[term] = apperances
+        except:
+            pass
 
     # Sort every posting entry by it doc_id
     for postings_entry in merged_letter_posting.values():

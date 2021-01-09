@@ -6,6 +6,9 @@ from indexer import Indexer
 from searcher import Searcher
 import utils
 
+"""
+Wordnet method
+"""
 
 # DO NOT CHANGE THE CLASS NAME
 class SearchEngine:

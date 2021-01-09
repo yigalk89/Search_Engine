@@ -12,6 +12,7 @@ def test_file_exists(fn):
     logging.error(f'{fn} does not exist.')
     return False
 
+query_to_zoom = 24
 config = configuration.ConfigClass()
 engine = search_engine_1.SearchEngine(config=config)
 bench_data_path = os.path.join('C:\\Users\\YigalK\\bgu\\ir\\project\\part3\\data', 'benchmark_data_train.snappy.parquet')
@@ -29,19 +30,20 @@ else:
 for i, row in queries.iterrows():
     q_id = row['query_id']
     q_keywords = row['keywords']
-    if q_id == 15:
+    if q_id == query_to_zoom:
         searcher = Searcher(engine._parser, engine._indexer, model=engine._model)
         query_as_list = searcher._parser.parse_query(q_keywords)
 
         relevant_docs = searcher._relevant_docs_from_posting(query_as_list)
         n_relevant = len(relevant_docs)
         ranked_doc_ids = searcher._ranker.rank_relevant_docs(relevant_docs, query_as_list, searcher._indexer)
+        break
 
 list_of_dict = []
 df = pd.read_parquet(bench_data_path, engine="pyarrow")
 
 for tweet_id, cos_sim in ranked_doc_ids:
-    row = {'tweet_id': tweet_id, 'text':df[df.tweet_id == tweet_id]['full_text'].to_list()[0], 'cos_sim': cos_sim ,'query':15}
+    row = {'tweet_id': tweet_id, 'text':df[df.tweet_id == tweet_id]['full_text'].to_list()[0], 'cos_sim': cos_sim ,'query':query_to_zoom}
     list_of_dict.append(row)
 
 
@@ -49,11 +51,10 @@ df1 = pd.DataFrame(list_of_dict)
 bench_lbls = pd.read_csv(bench_lbls_path,
                          dtype={'query': int, 'tweet': str, 'y_true': int})
 bench_lbls.columns = ['query','tweet_id', 'y_true']
-bench_lbls_15 = bench_lbls[bench_lbls['query'] == 15]
-print(bench_lbls_15)
-q_results_labeled = pd.merge(df1, bench_lbls_15,
-                                                 on=['query', 'tweet_id'], how='right', suffixes=('_result', '_bench'))
+bench_lbls_quer = bench_lbls[bench_lbls['query'] == query_to_zoom]
+q_results_labeled = pd.merge(df1, bench_lbls_quer,
+                                                 on=['query', 'tweet_id'], how='left', suffixes=('_result', '_bench'))
 full = pd.merge(q_results_labeled, df, on=['tweet_id'],how='inner' )
 full = full[['query', 'tweet_id', 'cos_sim', 'y_true', 'full_text']]
 print(full)
-full.to_csv('C:\\Users\\YigalK\\bgu\\ir\\project\\part3\\query15_right.csv')
+full.to_csv(f'C:\\Users\\YigalK\\bgu\\ir\\project\\part3\\zoom_in\\query{query_to_zoom}_zoom.csv')

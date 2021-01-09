@@ -10,14 +10,18 @@ from string import punctuation
 from spellchecker import SpellChecker
 
 
+
 class Parse:
     """
     Class that takes care of transforming a document in full text into a document object with tokens list, metadata
     about the tokens and details relevant for the inverted index
     """
 
-    def __init__(self, aug_meth = None, to_stem=True):
-        self.stop_words = stopwords.words('english')
+    def __init__(self, aug_meth = None, to_stem=False):
+        stopwords_from_analyzing = ['twitter.com', 'status', 'i', 'web', 'rt', 'https', "n't", 'it', "'s", '``', 'no',
+                                    'amp',
+                                    '...', "''", 'if', 'so', 'to']
+        self.stop_words = stopwords.words('english') + stopwords_from_analyzing
         self.punct = punctuation + "’”“‘"
         self.punct_larg = ["\"\"", "''", "‘‘", "’’", "``"]
         self.to_stem = to_stem
@@ -370,7 +374,7 @@ class Parse:
         :return:
         """
         text_tokens = word_tokenize(text)
-        text_tokens_without_stopwords = [w for w in text_tokens if w not in self.stop_words]
+        text_tokens_without_stopwords = [w.lower() for w in text_tokens if w.lower() not in self.stop_words and len(w) > 1]
         return text_tokens_without_stopwords
 
     def parse_doc(self, doc_as_list):
@@ -403,16 +407,20 @@ class Parse:
         text_wo_urls = self.remove_raw_urls(full_text, url_indices)
         text_wo_urls = text_wo_urls.replace('…', ' ')
         tokenized_text = self.parse_sentence(text_wo_urls)
-        tokens_wo_entity, entity_potential = self.find_entities(tokenized_text)
+        #tokens_wo_entity, entity_potential = self.find_entities(tokenized_text)
 
         # Add the relvant info from url and rewteet url field. The url can contain a lot if info about the tweet subject
-        tokens_wo_entity += self.parse_url_field(url)
-        tokens_wo_entity += self.parse_url_field(retweet_url)
+        #tokens_wo_entity += self.parse_url_field(url)
+        #tokens_wo_entity += self.parse_url_field(retweet_url)
+        #tokenized_text += self.parse_url_field(url)
+        #tokenized_text += self.parse_url_field(retweet_url)
         # apply all the parser rules on the tokens list
-        tokenized_text_w_rules = self.apply_rules(tokens_wo_entity)
+        #tokenized_text_w_rules = self.apply_rules(tokens_wo_entity)
+        tokenized_text_w_rules = self.apply_rules(tokenized_text)
+
         # filter out punctuation terms
-        tokenized_text_w_rules = [token for token in tokenized_text_w_rules if token not in self.punct]
-        tokenized_text_w_rules = [token for token in tokenized_text_w_rules if token not in self.punct_larg]
+        #tokenized_text_w_rules = [token for token in tokenized_text_w_rules if token not in self.punct]
+        #tokenized_text_w_rules = [token for token in tokenized_text_w_rules if token not in self.punct_larg]
         if self.to_stem:
             tokenized_text_w_rules = self.apply_stemming(tokenized_text_w_rules)
         #print(tokenized_text_w_rules)
@@ -427,7 +435,7 @@ class Parse:
             else:
                 term_dict[term][0] += 1
                 term_dict[term][1].append(i)
-
+        entity_potential = {}
         # create posting format dictionary for entities potential
         for term in entity_potential:
             if term not in entities_dict.keys():

@@ -115,6 +115,7 @@ class Indexer:
         # Make sure capital letters is being take care of
         new_idx = {}
         new_posting = {}
+        """
         for term, val in self.inverted_idx.items():
             if term[0].islower():
                 new_idx[term] = val
@@ -140,8 +141,20 @@ class Indexer:
         if len(new_idx.keys()) != len(new_posting.keys()):
             raise Exception(f"new idx and new postings aren't the same length. New index is: {len(new_idx.keys())} "\
             f"new posting is: {len(new_posting.keys())}")
+        """
+        """
+        sorted_idx = sorted(self.inverted_idx.items(),key=lambda x:x[1], reverse=True)
+        omit_top_terms = 0.1
+        slicing_idx = int(omit_top_terms * len(self.inverted_idx))
+        new_idx = dict(list(sorted_idx)[slicing_idx:])
+        omited_terms = dict(list(sorted_idx)[:slicing_idx])
+        for term in new_idx.keys():
+            new_posting[term] = self.postingDict[term]
+
         self.inverted_idx = new_idx
         self.postingDict = new_posting
+        """
+        pass
 
     @staticmethod
     def calc_tf_idf(term_freq_in_doc, max_freq_doc, corpus_size, doc_num_for_term):
@@ -164,6 +177,6 @@ class Indexer:
                 doc_id = post_entry[0]
                 term_freq_in_doc = post_entry[1][0]
                 tf_idf_vector_per_doc_id[doc_id][term_to_idx_dict[term]] = \
-                    self.calc_tf_idf(term_freq_in_doc, self.documentDict[doc_id][0], terms_num, len(posting))
+                    self.calc_tf_idf(term_freq_in_doc, self.documentDict[doc_id][1], terms_num, len(posting))
         self.tf_idf = tf_idf_vector_per_doc_id
         self.term_to_idx = term_to_idx_dict

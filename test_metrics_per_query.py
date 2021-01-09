@@ -10,7 +10,7 @@ if __name__ == '__main__':
     import importlib
     import logging
 
-    logging.basicConfig(filename='part_c_tests.log', level=logging.DEBUG,
+    logging.basicConfig(filename='part_c_tests_per_query.log', level=logging.DEBUG,
                         filemode='w', format='%(levelname)s %(asctime)s: %(message)s')
     import metrics
 
@@ -164,32 +164,34 @@ if __name__ == '__main__':
                     # test that the average across queries of precision,
                     # precision@5, precision@10, precision@50, and recall
                     # is in [0,1].
-                    prec, p5, p10, p50, recall = \
-                        metrics.precision(q_results_labeled), \
-                        metrics.precision(q_results_labeled.groupby('query').head(5)), \
-                        metrics.precision(q_results_labeled.groupby('query').head(10)), \
-                        metrics.precision(q_results_labeled.groupby('query').head(50)), \
-                        metrics.recall(q_results_labeled, q2n_relevant)
-                    logging.debug(f"{engine_module} results produced average precision of {prec}.")
-                    logging.debug(f"{engine_module} results produced average precision@5 of {p5}.")
-                    logging.debug(f"{engine_module} results produced average precision@10 of {p10}.")
-                    logging.debug(f"{engine_module} results produced average precision@50 of {p50}.")
-                    logging.debug(f"{engine_module} results produced average recall of {recall}.")
-                    if prec < 0 or prec > 1:
-                        logging.error(f"The average precision for {engine_module} is out of range [0,1].")
-                    if p5 < 0 or p5 > 1:
-                        logging.error(f"The average precision@5 for {engine_module} is out of range [0,1].")
-                    if p5 < 0 or p5 > 1:
-                        logging.error(f"The average precision@5 for {engine_module} is out of range [0,1].")
-                    if p50 < 0 or p50 > 1:
-                        logging.error(f"The average precision@50 for {engine_module} is out of range [0,1].")
-                    if recall < 0 or recall > 1:
-                        logging.error(f"The average recall for {engine_module} is out of range [0,1].")
+                    for i, row in queries.iterrows():
+                        q_id = row['query_id']
+                        prec, p5, p10, p50, recall = \
+                            metrics.precision(q_results_labeled,True,q_id), \
+                            metrics.precision(q_results_labeled.groupby('query').head(5), True, q_id), \
+                            metrics.precision(q_results_labeled.groupby('query').head(10), True, q_id), \
+                            metrics.precision(q_results_labeled.groupby('query').head(50), True, q_id), \
+                            metrics.recall(q_results_labeled, {q_id: q2n_relevant[q_id]})
+                        logging.debug(f"{engine_module} results for query {q_id} produced precision of {prec}.")
+                        logging.debug(f"{engine_module} results for query {q_id} produced precision@5 of {p5}.")
+                        logging.debug(f"{engine_module} results for query {q_id} produced precision@10 of {p10}.")
+                        logging.debug(f"{engine_module} results for query {q_id} produced precision@50 of {p50}.")
+                        logging.debug(f"{engine_module} results for query {q_id} produced recall of {recall}.")
+                        if prec < 0 or prec > 1:
+                            logging.error(f"The precision for {engine_module} query {q_id} is out of range [0,1].")
+                        if p5 < 0 or p5 > 1:
+                            logging.error(f"The precision@5 for {engine_module} query {q_id} is out of range [0,1].")
+                        if p5 < 0 or p5 > 1:
+                            logging.error(f"The precision@5 for {engine_module} query {q_id} is out of range [0,1].")
+                        if p50 < 0 or p50 > 1:
+                            logging.error(f"The precision@50 for {engine_module} query {q_id} is out of range [0,1].")
+                        if recall < 0 or recall > 1:
+                            logging.error(f"The recall for {engine_module} query {q_id} is out of range [0,1].")
 
                 if engine_module == 'search_engine_best' and \
                         test_file_exists('idx_bench.pkl'):
                     logging.info('idx_bench.pkl found!')
-                    engine.load_index('idx_bench')
+                    engine.load_index('idx_bench.pkl')
                     logging.info('Successfully loaded idx_bench.pkl using search_engine_best.')
 
             except Exception as e:

@@ -33,7 +33,8 @@ class Searcher:
 
         relevant_docs = self._relevant_docs_from_posting(query_as_list)
         n_relevant = len(relevant_docs)
-        ranked_doc_ids = self._ranker.rank_relevant_docs(relevant_docs, query_as_list, self._indexer)
+        ranked_doc_ids_with_ranks = self._ranker.rank_relevant_docs(relevant_docs, query_as_list, self._indexer)
+        ranked_doc_ids = [tup[0] for tup in ranked_doc_ids_with_ranks]
         if k:
             ret = self._ranker.retrieve_top_k(ranked_doc_ids, k)
             n_relevant = len(ret)

@@ -86,11 +86,13 @@ class Ranker:
         similarity_dict = {}
         for doc_id in relevant_docs:
             tf_vect = indexer.tf_idf[doc_id]
-            similarity_dict[doc_id] = np.dot(tf_vect, query_tf_idf) / (
+            sim = np.dot(tf_vect, query_tf_idf) / (
                         np.linalg.norm(tf_vect) * np.linalg.norm(query_tf_idf))
+            if sim > 0.0:
+                similarity_dict[doc_id] = sim
 
         sorted_tups = sorted(similarity_dict.items(), key=lambda item: item[1], reverse=True)
-        return [tup[0] for tup in sorted_tups]
+        return sorted_tups
 
     @staticmethod
     def retrieve_top_k(sorted_relevant_doc, k=1):
